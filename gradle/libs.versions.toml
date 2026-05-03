@@ -1,0 +1,66 @@
+# This file config Library Catalog used in Gradle
+
+# Define version for those libraries
+[versions]
+springboot-stater = "4.0.0" # Fix some error when i use new Spring Boot released (4.0.0)
+com-google-code-gson-gson = "2.11.0" # GSON for JSON
+
+#com-sun-mail-javax-mail = "1.6.2" # For sending mail (old)
+# These thing used for JSP + Servlet (old) :D
+#jakarta-servlet-jakarta-servlet-api = "6.1.0"
+#jakarta-servlet-jsp-jstl-jakarta-servlet-jsp-jstl-api = "3.0.2"
+#org-glassfish-web-jakarta-servlet-jsp-jstl = "3.0.1"
+
+#mysql-mysql-connector-java = "8.0.33"
+postgresql = "42.7.10"
+
+org-jdbi-jdbi3-core = "3.47.0"
+org-jdbi-jdbi3-sqlobject = "3.47.0"
+
+org-projectlombok-lombok = "1.18.30" # Lombok
+
+org-junit-jupiter-junit-jupiter-api = "5.11.0"
+org-junit-jupiter-junit-jupiter-engine = "5.11.0"
+
+org-mindrot-jbcrypt = "0.4" # For hasing password
+
+org-hibernate-orm = "7.2.0.CR3" #Hibernate
+
+# For cloudinary
+cloudinary = "2.3.2"
+
+jsoup = "1.22.1"
+
+# Libraries definition
+[libraries]
+springboot-starter = {module = "org.springframework.boot:spring-boot-starter", version.ref = "springboot-stater" }
+spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web", version.ref = "springboot-stater" }
+spring-boot-starter-mail = { group = "org.springframework.boot", name = "spring-boot-starter-mail", version.ref = "springboot-stater" }
+spring-boot-starter-thymeleaf = { group = "org.springframework.boot", name = "spring-boot-starter-thymeleaf", version.ref = "springboot-stater" }
+spring-boot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa", version.ref = "springboot-stater" }
+#spring-boot-starter-data-redis = { group = "org.springframework.boot", name = "spring-boot-starter-data-redis", version.ref = "springboot-stater" }
+
+com-google-code-gson-gson = { module = "com.google.code.gson:gson", version.ref = "com-google-code-gson-gson" }
+
+#mysql-mysql-connector-java = { module = "mysql:mysql-connector-java", version.ref = "mysql-mysql-connector-java" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+
+org-jdbi-jdbi3-core = { module = "org.jdbi:jdbi3-core", version.ref = "org-jdbi-jdbi3-core" }
+org-jdbi-jdbi3-sqlobject = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "org-jdbi-jdbi3-sqlobject" }
+
+org-projectlombok-lombok = { module = "org.projectlombok:lombok", version.ref = "org-projectlombok-lombok" }
+
+org-junit-jupiter-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "org-junit-jupiter-junit-jupiter-api" }
+org-junit-jupiter-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "org-junit-jupiter-junit-jupiter-engine" }
+
+org-mindrot-jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "org-mindrot-jbcrypt" }
+
+org-hibernate-orm = { module = "org.hibernate.orm:hibernate-core", version.ref = "org-hibernate-orm"}
+
+cloudinary = { module = "com.cloudinary:cloudinary-core", version.ref = "cloudinary" }
+cloudinary-http5 = { module = "com.cloudinary:cloudinary-http5", version.ref = "cloudinary" }
+
+jsoup = {module = "org.jsoup:jsoup", version.ref = "jsoup"}
+#jakarta-servlet-jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet-jakarta-servlet-api" }
+#jakarta-servlet-jsp-jstl-jakarta-servlet-jsp-jstl-api = { module = "jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api", version.ref = "jakarta-servlet-jsp-jstl-jakarta-servlet-jsp-jstl-api" }
+#org-glassfish-web-jakarta-servlet-jsp-jstl = { module = "org.glassfish.web:jakarta.servlet.jsp.jstl", version.ref = "org-glassfish-web-jakarta-servlet-jsp-jstl" }
