@@ -1,0 +1,52 @@
+[versions]
+springboot-stater = "4.0.5"
+com-google-code-gson-gson = "2.11.0"
+
+postgresql = "42.7.10"
+
+org-jdbi-jdbi3-core = "3.47.0"
+org-jdbi-jdbi3-sqlobject = "3.47.0"
+
+org-projectlombok-lombok = "1.18.30" # Lombok
+
+org-junit-jupiter-junit-jupiter-api = "5.11.0"
+org-junit-jupiter-junit-jupiter-engine = "5.11.0"
+
+org-mindrot-jbcrypt = "0.4" # For hasing password
+
+org-hibernate-orm = "7.2.0.CR3" #Hibernate
+
+# For cloudinary
+cloudinary = "2.3.2"
+
+jsoup = "1.22.1"
+
+# Libraries definition
+[libraries]
+springboot-starter = {module = "org.springframework.boot:spring-boot-starter", version.ref = "springboot-stater" }
+spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web", version.ref = "springboot-stater" }
+spring-boot-starter-mail = { group = "org.springframework.boot", name = "spring-boot-starter-mail", version.ref = "springboot-stater" }
+spring-boot-starter-thymeleaf = { group = "org.springframework.boot", name = "spring-boot-starter-thymeleaf", version.ref = "springboot-stater" }
+spring-boot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa", version.ref = "springboot-stater" }
+#spring-boot-starter-data-redis = { group = "org.springframework.boot", name = "spring-boot-starter-data-redis", version.ref = "springboot-stater" }
+
+com-google-code-gson-gson = { module = "com.google.code.gson:gson", version.ref = "com-google-code-gson-gson" }
+
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+
+org-jdbi-jdbi3-core = { module = "org.jdbi:jdbi3-core", version.ref = "org-jdbi-jdbi3-core" }
+org-jdbi-jdbi3-sqlobject = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "org-jdbi-jdbi3-sqlobject" }
+
+org-projectlombok-lombok = { module = "org.projectlombok:lombok", version.ref = "org-projectlombok-lombok" }
+
+org-junit-jupiter-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "org-junit-jupiter-junit-jupiter-api" }
+org-junit-jupiter-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "org-junit-jupiter-junit-jupiter-engine" }
+
+org-mindrot-jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "org-mindrot-jbcrypt" }
+
+org-hibernate-orm = { module = "org.hibernate.orm:hibernate-core", version.ref = "org-hibernate-orm"}
+
+cloudinary = { module = "com.cloudinary:cloudinary-core", version.ref = "cloudinary" }
+cloudinary-http5 = { module = "com.cloudinary:cloudinary-http5", version.ref = "cloudinary" }
+
+jsoup = {module = "org.jsoup:jsoup", version.ref = "jsoup"}
