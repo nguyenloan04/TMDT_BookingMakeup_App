@@ -2,11 +2,12 @@ package com.example.tmdt_bookingmakeup_app.services.payment;
 
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
 import com.google.gson.JsonObject;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class PaymentIPNService {
     public String generatePaymentIpn(Map<String, String> allParams) {
         JsonObject json = new JsonObject();
