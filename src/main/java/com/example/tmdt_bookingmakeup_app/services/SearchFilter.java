@@ -1,7 +1,7 @@
-package com.example.tmdt_bookingmakeup_app.service;
+package com.example.tmdt_bookingmakeup_app.services;
 
-import com.example.tmdt_bookingmakeup_app.model.MakeupService;
-import com.example.tmdt_bookingmakeup_app.dto.SearchResponse;
+import com.example.tmdt_bookingmakeup_app.models.user.MakeupService;
+import com.example.tmdt_bookingmakeup_app.dto.response.search.SearchResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

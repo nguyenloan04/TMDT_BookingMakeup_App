@@ -1,4 +1,4 @@
-package com.example.tmdt_bookingmakeup_app.model;
+package com.example.tmdt_bookingmakeup_app.models.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

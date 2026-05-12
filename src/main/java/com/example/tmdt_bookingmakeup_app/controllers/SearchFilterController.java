@@ -1,7 +1,7 @@
-package com.example.tmdt_bookingmakeup_app.controller;
+package com.example.tmdt_bookingmakeup_app.controllers;
 
-import com.example.tmdt_bookingmakeup_app.dto.SearchResponse;
-import com.example.tmdt_bookingmakeup_app.service.SearchFilter;
+import com.example.tmdt_bookingmakeup_app.dto.response.search.SearchResponse;
+import com.example.tmdt_bookingmakeup_app.services.SearchFilter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
