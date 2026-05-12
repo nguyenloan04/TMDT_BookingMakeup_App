@@ -5,7 +5,7 @@
 ## Type of change
 
 - [ ] Config
-- [ ] New scripts
+- [ ] New features
 - [ ] Bug fix
 - [ ] Refactor
 - [ ] Documentation update
