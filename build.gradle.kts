@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.spring.boot.starter.thymeleaf)
     implementation(libs.springboot.starter)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.websocket)
 //    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.spring.boot.starter.web)
 
