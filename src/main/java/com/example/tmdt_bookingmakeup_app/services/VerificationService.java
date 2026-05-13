@@ -15,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
-@Service
+// TODO: Bật lại khi config mail
+// @Service
 @Slf4j
 public class VerificationService {
     private static final int LIMIT_ATTEMPT = 5;
