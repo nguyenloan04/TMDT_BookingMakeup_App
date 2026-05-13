@@ -43,12 +43,21 @@ public class ChatMessageService {
         message.setContent(chatDto.content());
         message.setStatus(MessageStatus.SENT);
         message.setTimestamp(LocalDateTime.now());
+        ChatMessage saved = repository.save(message);
+
         //Update unread message
-        room.setUnreadCount(room.getUnreadCount() + 1);
-        room.setLastMessage(message.getContent());
-        room.setLastMessageTime(message.getTimestamp());
+        if (chatDto.senderId().equals(room.getLastSenderId())) {
+            room.setUnreadCount(room.getUnreadCount() + 1);
+        } else {
+            room.setLastSenderId(chatDto.senderId());
+            room.setUnreadCount(1);
+        }
+
+        room.setLastMessage(saved.getContent());
+        room.setLastMessageTime(saved.getTimestamp());
         chatRoomRepository.save(room);
-        return repository.save(message);
+
+        return saved;
     }
 
     public Page<ChatMessage> findChatMessages(UUID sId, UUID rId, Pageable pageable) {
@@ -68,8 +77,14 @@ public class ChatMessageService {
     }
 
     @Transactional
-    public void markAsRead(String roomId, UUID userId) {
-        repository.updateAllToRead(roomId, userId);
-        chatRoomService.resetUnreadCount(roomId);
+    public void markAsRead(String chatId, UUID readerId) {
+        ChatRoom room = chatRoomRepository.findById(chatId)
+                .orElseThrow();
+        //Reset if only readerId is not the lastSender
+        if (!readerId.toString().equals(room.getLastSenderId())) {
+            room.setUnreadCount(0);
+            chatRoomRepository.save(room);
+            repository.updateAllToRead(chatId, readerId);
+        }
     }
 }

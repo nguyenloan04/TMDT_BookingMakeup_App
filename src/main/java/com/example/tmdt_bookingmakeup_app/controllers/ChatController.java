@@ -3,6 +3,8 @@ package com.example.tmdt_bookingmakeup_app.controllers;
 import com.example.tmdt_bookingmakeup_app.common.enums.MessageStatus;
 import com.example.tmdt_bookingmakeup_app.dto.chat.ChatDto;
 import com.example.tmdt_bookingmakeup_app.models.chat.ChatMessage;
+import com.example.tmdt_bookingmakeup_app.models.chat.ChatRoom;
+import com.example.tmdt_bookingmakeup_app.repositories.ChatRoomRepository;
 import com.example.tmdt_bookingmakeup_app.services.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
+    private final ChatRoomRepository chatRoomRepository;
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatDto chatDto) {
