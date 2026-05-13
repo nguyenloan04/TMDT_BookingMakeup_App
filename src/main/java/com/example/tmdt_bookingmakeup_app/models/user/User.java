@@ -57,6 +57,11 @@ public class User {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @Column(name = "address")
+    private LocalDateTime address;
+
+    @Column(name="total_points")
+    private Integer totalPoints;
 
     @PrePersist
     protected void onCreate() {
@@ -64,5 +69,6 @@ public class User {
         avatarUrl = "";
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        totalPoints = 0;
     }
 }
