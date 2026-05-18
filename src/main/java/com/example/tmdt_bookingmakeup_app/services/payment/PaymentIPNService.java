@@ -1,14 +1,25 @@
 package com.example.tmdt_bookingmakeup_app.services.payment;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.OrderStatus;
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
+import com.example.tmdt_bookingmakeup_app.services.OrderService;
 import com.google.gson.JsonObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class PaymentIPNService {
+    private final OrderService orderService;
+
+    @Autowired
+    public PaymentIPNService(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
     public String generatePaymentIpn(Map<String, String> allParams) {
         JsonObject json = new JsonObject();
         String rspCode;
@@ -23,33 +34,26 @@ public class PaymentIPNService {
             String signValue = VNPayConfig.generateHmacSHA512(fields.keySet().toString(), fields.values().toString());
 
             if (signValue.equals(vnpSecureHash)) {
-//                OrderService orderService = new OrderService(request);
+
                 String requestOrderStatus = allParams.get("orderStatus");
                 String requestOrderId = allParams.get("orderId");
                 String requestsAmount = allParams.get("amount");
-                int orderId = requestOrderId != null ? Integer.parseInt(requestOrderId) : -1;
+                UUID orderId = UUID.fromString(requestOrderId);
                 int amount = requestsAmount != null ? Integer.parseInt(requestsAmount) : -1;
-//                OrderStatus orderStatus = requestOrderStatus != null && OrderStatus.PENDING_CONFIRMATION.getCode() == Integer.parseInt(requestOrderStatus) ? OrderStatus.PENDING_CONFIRMATION : null;
+                OrderStatus orderStatus = requestOrderStatus != null && OrderStatus.PENDING.getValue() == Integer.parseInt(requestOrderStatus) ? OrderStatus.PENDING : null;
 
-                //FIXME: Add OrderService
-//                boolean checkOrderId = orderId != -1 && orderService.getOrderById(orderId) != null; // vnp_TxnRef exists in your database
-//                boolean checkAmount = amount != -1; // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the amount of the code (vnp_TxnRef) in the Your database).
-//                boolean checkOrderStatus = orderStatus == OrderStatus.PENDING_CONFIRMATION; // PaymnentStatus = 0 (pending)
-                boolean checkOrderId = false;
-                boolean checkAmount = false;
-                boolean checkOrderStatus = false;
+                boolean checkOrderId = orderService.getOrderById(orderId) != null; // vnp_TxnRef exists in your database
+                boolean checkAmount = amount != -1; // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the amount of the code (vnp_TxnRef) in Your database).
+                //FIXME: Fix business logic here
+                boolean checkOrderStatus = orderStatus == OrderStatus.CONFIRMED; // PaymnentStatus = 0 (pending)
 
                 if (checkOrderId) {
                     if (checkAmount) {
                         if (checkOrderStatus) {
                             if ("00".equals(allParams.get("vnp_ResponseCode"))) {
-                                //Cập nhật PaymentStatus thành
-                                // PaymentStatus.PAYMENT_PAID
-//                                orderService.updateStatus(orderId, OrderStatus.WAITING_FOR_PICKUP.getCode());
+                                orderService.updateStatus(orderId, OrderStatus.PAID);
                             } else {
-                                //Cập nhật PaymentStatus thành
-                                //PaymentStatus.PAYMENT_UNPAID
-//                                orderService.updateStatus(orderId, OrderStatus.WAITING_FOR_PICKUP.getCode());
+                                orderService.updateStatus(orderId, OrderStatus.PENDING);
                             }
                             rspCode = "00";
                             message = "Confirm Success";

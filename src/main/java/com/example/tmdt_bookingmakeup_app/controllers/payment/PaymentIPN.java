@@ -1,6 +1,7 @@
 package com.example.tmdt_bookingmakeup_app.controllers.payment;
 
 import com.example.tmdt_bookingmakeup_app.services.payment.PaymentIPNService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +13,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/")
+@RequiredArgsConstructor
 public class PaymentIPN {
-    PaymentIPNService paymentIPNService = new PaymentIPNService();
+    PaymentIPNService paymentIPNService;
 
     @Autowired
     public PaymentIPN(PaymentIPNService paymentIPNService) {
