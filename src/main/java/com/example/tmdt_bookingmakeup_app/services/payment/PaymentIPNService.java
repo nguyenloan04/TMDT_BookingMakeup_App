@@ -11,8 +11,8 @@ import java.util.Map;
 public class PaymentIPNService {
     public String generatePaymentIpn(Map<String, String> allParams) {
         JsonObject json = new JsonObject();
-        String rspCode = "";
-        String message = "";
+        String rspCode;
+        String message;
         try {
             Map<String, String> fields = new HashMap<>(allParams);
 
