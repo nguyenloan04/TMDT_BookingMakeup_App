@@ -20,7 +20,7 @@ public class OrderService {
     }
 
     public Order getOrderById(UUID orderId) {
-        return orderRepository.findByOrderId(orderId).orElse(null);
+        return orderRepository.findById(orderId).orElse(null);
     }
 
     @Transactional
