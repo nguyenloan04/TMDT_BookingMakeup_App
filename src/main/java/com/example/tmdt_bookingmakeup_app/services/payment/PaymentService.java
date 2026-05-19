@@ -2,6 +2,7 @@ package com.example.tmdt_bookingmakeup_app.services.payment;
 
 
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
+import com.example.tmdt_bookingmakeup_app.services.OrderService;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,12 @@ import java.util.*;
 @Slf4j
 public class PaymentService {
     VNPayConfig config;
+    OrderService orderService;
 
     @Autowired
-    public PaymentService(VNPayConfig config) {
+    public PaymentService(VNPayConfig config, OrderService orderService) {
         this.config = config;
+        this.orderService = orderService;
     }
 
     public String generatePayment(Map<String, String> params) {
@@ -39,16 +42,13 @@ public class PaymentService {
 //                }
 //            }
 
-            String requestAddressId = params.get("addressId");
-            if (requestAddressId == null) return null;
-//            int addressId = Integer.parseInt(requestAddressId);
-//            Address address = account.getLocations().stream().filter(obj -> obj.getId() == addressId).findFirst().orElse(null);
-//            if (address == null) ControllerUtil.sendAjaxResultFalse(response, json, null);
-
+            String address = params.get("address");
+            if (address == null) return json.toString();
+//
 //            int deliveryQuantity = listSelectedProductCode.values().stream().mapToInt(CartProduct::getQuantity).sum();
 //            int deliveryPrice = OrderFeeService.generateOrderFeeData(address.getProvince(), address.getDistrict(), address.getWard(), deliveryQuantity);
 //            List<String> listCartCode = listSelectedProductCode.keySet().stream().toList();
-
+//
 //            double totalPrice = cart.getTotalPrice(listCartCode);
 //            double finalPrice = cart.getFinalPrice(listCartCode, deliveryPrice);
 
