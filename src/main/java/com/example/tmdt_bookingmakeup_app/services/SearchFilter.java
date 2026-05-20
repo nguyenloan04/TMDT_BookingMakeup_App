@@ -3,7 +3,7 @@ package com.example.tmdt_bookingmakeup_app.services;
 import com.example.tmdt_bookingmakeup_app.dto.response.search.SearchResponse;
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
-import com.example.tmdt_bookingmakeup_app.models.user.MakeupService;
+import com.example.tmdt_bookingmakeup_app.dto.response.search.MakeupService;
 import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
 import com.example.tmdt_bookingmakeup_app.repositories.ArtistRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceRepository;

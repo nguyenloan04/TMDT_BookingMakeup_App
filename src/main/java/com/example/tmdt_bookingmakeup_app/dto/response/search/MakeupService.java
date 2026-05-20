@@ -1,4 +1,4 @@
-package com.example.tmdt_bookingmakeup_app.models.user;
+package com.example.tmdt_bookingmakeup_app.dto.response.search;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

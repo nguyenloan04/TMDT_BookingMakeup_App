@@ -15,8 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
-// TODO: Bật lại khi config mail
-// @Service
+@Service
 @Slf4j
 public class VerificationService {
     private static final int LIMIT_ATTEMPT = 5;
@@ -78,7 +77,7 @@ public class VerificationService {
             verificationRepository.save(savedVerification);
 
             //Send mail
-//            mailService.sendOtpEmail(email, otp);
+            mailService.sendOtpEmail(email, otp);
             return new VerifyResponse(true, "Sent verification code successfully. Check your email to get your verification code.");
         } catch (Exception e) {
             log.error(e.getMessage());
