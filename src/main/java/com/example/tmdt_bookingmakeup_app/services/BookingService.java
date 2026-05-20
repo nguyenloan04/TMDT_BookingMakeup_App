@@ -1,5 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.services;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.common.enums.UserRole;
 import com.example.tmdt_bookingmakeup_app.dto.request.booking.CreateBookingRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.booking.UpdateBookingStatusRequest;
@@ -11,11 +12,11 @@ import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.models.user.User;
 import com.example.tmdt_bookingmakeup_app.repositories.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +24,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
+@org.springframework.stereotype.Service
 @Transactional
 @RequiredArgsConstructor
-@org.springframework.stereotype.Service
 public class BookingService {
 
     private final BookingRepository bookingRepository;
@@ -36,23 +36,6 @@ public class BookingService {
     private final ServiceOwnerRepository serviceOwnerRepository;
     private final PromotionService promotionService;
 
-    @Autowired
-    public BookingService(
-            BookingRepository bookingRepository,
-            UserRepository userRepository,
-            ServiceRepository serviceRepository,
-            ArtistRepository artistRepository,
-            ServiceOwnerRepository serviceOwnerRepository,
-            PromotionService promotionService) {
-        this.bookingRepository = bookingRepository;
-        this.userRepository = userRepository;
-        this.serviceRepository = serviceRepository;
-        this.artistRepository = artistRepository;
-        this.serviceOwnerRepository = serviceOwnerRepository;
-        this.promotionService = promotionService;
-    }
-
-    @Transactional
     public BookingDto createBooking(CreateBookingRequest request, UUID customerId) {
         // 1. Fetch user, service and artist
         User customer = userRepository.findById(customerId)
@@ -83,13 +66,10 @@ public class BookingService {
             if (valResponse.isValid()) {
                 discountAmount = valResponse.getDiscountAmount();
             } else {
-                // Throw exception if promo code was sent but was invalid
                 throw new RuntimeException("Không thể áp dụng mã giảm giá: " + valResponse.getErrorMessage());
             }
         }
 
-    public List<Booking> getArtistSchedule(UUID artistId, LocalDate date) {
-        return bookingRepository.findByArtistIdAndBookingDate(artistId, date);
         double totalAmount = Math.max(0.0, basePrice - discountAmount);
         double depositAmount = totalAmount * 0.2; // Default to 20% deposit
         double platformFee = totalAmount * 0.05;  // Default to 5% platform fee
@@ -105,30 +85,49 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDepositAmount(depositAmount);
         booking.setPlatformFee(platformFee);
-        booking.setStatus("PENDING");
+        booking.setStatus(BookingStatus.valueOf(BookingStatus.PENDING.name()));
 
         Booking saved = bookingRepository.save(booking);
         return mapToDto(saved);
     }
 
+
+    public List<Booking> getArtistSchedule(UUID artistId, LocalDate date) {
+        return bookingRepository.findByArtistIdAndBookingDate(artistId, date);
+    }
+
     public Booking rescheduleBooking(UUID bookingId, LocalDate newDate, LocalTime newStart, LocalTime newEnd) {
-    @Transactional
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+
+        List<Booking> conflicts = bookingRepository.findConflictingBookings(
+                booking.getArtist().getId(), newDate, newStart, newEnd);
+
+        if (!conflicts.isEmpty()) {
+            throw new RuntimeException("Cannot create booking in this time!");
+        }
+
+        booking.setBookingDate(newDate);
+        booking.setStartTime(newStart);
+        booking.setEndTime(newEnd);
+        return bookingRepository.save(booking);
+    }
+
     public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole requesterRole) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Not found"));
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
 
         String newStatus = request.status().toUpperCase().trim();
-        String currentStatus = booking.getStatus().toUpperCase();
+        String currentStatus = String.valueOf(booking.getStatus());
 
         // 1. If requester is Admin: allowed to change to any status
         if (requesterRole == UserRole.ADMIN) {
-            booking.setStatus(newStatus);
+            booking.setStatus(BookingStatus.valueOf(newStatus));
             Booking saved = bookingRepository.save(booking);
             return mapToDto(saved);
         }
 
-        // 2. If requester is the Customer: can ONLY cancel their own PENDING or CONFIRMED booking
+        // 2. If requester is the Customer
         if (booking.getCustomer().getId().equals(requesterId)) {
             if (!newStatus.equals("CANCELLED")) {
                 throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
@@ -136,12 +135,12 @@ public class BookingService {
             if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
                 throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
             }
-            booking.setStatus("CANCELLED");
+            booking.setStatus(BookingStatus.valueOf("CANCELLED"));
             Booking saved = bookingRepository.save(booking);
             return mapToDto(saved);
         }
 
-        // 3. If requester is the ServiceOwner: can CONFIRM, COMPLETE, or CANCEL/REJECT bookings for their shop
+        // 3. If requester is the ServiceOwner
         UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
         if (requesterId.equals(ownerId)) {
             if (newStatus.equals("CONFIRMED")) {
@@ -153,7 +152,6 @@ public class BookingService {
                     throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
                 }
             } else if (newStatus.equals("CANCELLED")) {
-                // Allowed to reject/cancel from PENDING or CONFIRMED
                 if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
                     throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
                 }
@@ -161,7 +159,7 @@ public class BookingService {
                 throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
             }
 
-            booking.setStatus(newStatus);
+            booking.setStatus(BookingStatus.valueOf(newStatus));
             Booking saved = bookingRepository.save(booking);
             return mapToDto(saved);
         }
@@ -169,32 +167,20 @@ public class BookingService {
         throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
     }
 
-        List<Booking> conflicts = bookingRepository.findConflictingBookings(
-                booking.getArtist().getId(), newDate, newStart, newEnd);
     public List<BookingDto> getBookings(UUID requesterId, UserRole requesterRole) {
         if (requesterRole == UserRole.ADMIN) {
-            // Admin lists all bookings in system
             return bookingRepository.findAll().stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
         }
 
-        if (!conflicts.isEmpty()) {
-            throw new RuntimeException("Cannot create booking in this time!");
-        // Check if requester is a ServiceOwner
         boolean isServiceOwner = serviceOwnerRepository.existsById(requesterId);
         if (isServiceOwner) {
-            // Service Owner lists bookings placed at their shop
             return bookingRepository.findByServiceOwnerUserId(requesterId).stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
         }
 
-        booking.setBookingDate(newDate);
-        booking.setStartTime(newStart);
-        booking.setEndTime(newEnd);
-        return bookingRepository.save(booking);
-        // Otherwise: list bookings placed by this customer
         return bookingRepository.findByCustomerId(requesterId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -202,14 +188,16 @@ public class BookingService {
 
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUniqueCustomers", bookingRepository.countUniqueCustomers());
+        stats.put("topServices", bookingRepository.findTopServices(PageRequest.of(0, 5)));
+        stats.put("topCustomers", bookingRepository.findTopCustomers(PageRequest.of(0, 10)));
+        return stats;
+    }
+
     public BookingDto getBookingById(UUID id, UUID requesterId, UserRole requesterRole) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
 
-        stats.put("totalUniqueCustomers", bookingRepository.countUniqueCustomers());
-        stats.put("topServices", bookingRepository.findTopServices(PageRequest.of(0, 5)));
-        stats.put("topCustomers", bookingRepository.findTopCustomers(PageRequest.of(0, 10)));
-        // Authorization check: Admin, Customer who placed it, or Service Owner who owns the service can view
         UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
         if (requesterRole != UserRole.ADMIN
                 && !booking.getCustomer().getId().equals(requesterId)
@@ -217,10 +205,8 @@ public class BookingService {
             throw new RuntimeException("Access Denied: You are not authorized to view this booking");
         }
 
-        return stats;
         return mapToDto(booking);
     }
-
     private BookingDto mapToDto(Booking booking) {
         BookingDto dto = new BookingDto();
         dto.setId(booking.getId());
@@ -237,7 +223,7 @@ public class BookingService {
         dto.setTotalAmount(booking.getTotalAmount());
         dto.setDepositAmount(booking.getDepositAmount());
         dto.setPlatformFee(booking.getPlatformFee());
-        dto.setStatus(booking.getStatus());
+        dto.setStatus(String.valueOf(booking.getStatus()));
         return dto;
     }
 }
