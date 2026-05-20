@@ -22,7 +22,7 @@ public class Payment {
     @JoinColumn(name = "booking_id")
     private Booking booking;
     @Column(name="transaction_type")
-    private String transactionType; // deposit, full_payment
+    private String transactionType; // deposit
     @Column(name="method")
     private String paymentMethod; // Momo, ATM...
     @Column(name="total_amount")

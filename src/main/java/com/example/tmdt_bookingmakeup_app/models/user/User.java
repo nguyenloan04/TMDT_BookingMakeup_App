@@ -58,7 +58,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     @Column(name = "address")
-    private LocalDateTime address;
+    private String address;
 
     @Column(name="total_points")
     private Integer totalPoints;
