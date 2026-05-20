@@ -16,6 +16,7 @@ import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
+    List<Booking> findByCustomerId(UUID customerId);
 
     List<Booking> findByArtistIdAndBookingDate(UUID artistId, LocalDate bookingDate);
 
@@ -46,4 +47,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             "WHERE b.status = 'COMPLETED' " +
             "GROUP BY u.id, u.displayName, u.email ORDER BY COUNT(b.id) DESC")
     List<TopCustomerDTO> findTopCustomers(Pageable pageable);
+    @Query("SELECT b FROM Booking b WHERE b.service.owner.userId = :ownerUserId")
+    List<Booking> findByServiceOwnerUserId(@Param("ownerUserId") UUID ownerUserId);
 }

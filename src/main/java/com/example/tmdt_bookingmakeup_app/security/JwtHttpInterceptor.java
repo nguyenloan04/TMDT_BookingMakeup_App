@@ -3,6 +3,7 @@ package com.example.tmdt_bookingmakeup_app.security;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -11,6 +12,8 @@ import java.util.UUID;
 
 @Component
 public class JwtHttpInterceptor implements HandlerInterceptor {
+
+    @Autowired
     private JwtConfig jwtConfig;
 
     @Override
