@@ -17,7 +17,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Protect endpoints such as profile updates, listings, bookings, etc.
         // Exclude authentication and registration pathways, public searches
         registry.addInterceptor(jwtHttpInterceptor)
-                .addPathPatterns("/users/**", "/chats/**", "/messages/**")
-                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id}");
+                .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**")
+                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id}", "/promotions", "/promotions/{id}", "/promotions/validate");
     }
 }
