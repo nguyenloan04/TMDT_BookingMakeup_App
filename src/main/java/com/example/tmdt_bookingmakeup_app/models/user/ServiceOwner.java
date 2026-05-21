@@ -30,7 +30,7 @@ public class ServiceOwner {
     private Integer experienceYears;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "showcase_type", columnDefinition = "TEXT")
+    @Column(name = "showcase_type")
     private ShowcaseType showcaseType;
 
     @Column(name="identify_front")

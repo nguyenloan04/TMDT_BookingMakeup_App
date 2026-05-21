@@ -1,6 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.dto.response.search;
 
-import com.example.tmdt_bookingmakeup_app.models.user.MakeupService;
+import com.example.tmdt_bookingmakeup_app.dto.response.search.MakeupService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
