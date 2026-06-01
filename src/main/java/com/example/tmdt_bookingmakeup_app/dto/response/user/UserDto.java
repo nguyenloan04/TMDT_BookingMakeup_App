@@ -21,6 +21,6 @@ public class UserDto {
     private boolean isVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime address; // Note: 'address' in model is typed as LocalDateTime (as per model definition)
+    private String address;
     private Integer totalPoints;
 }

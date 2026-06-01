@@ -6,6 +6,7 @@ import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateProfileRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateRoleRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateStatusRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateUserAdminRequest;
+import com.example.tmdt_bookingmakeup_app.dto.request.user.ChangePasswordRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto;
 import com.example.tmdt_bookingmakeup_app.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,6 +55,22 @@ public class UserController {
             UUID userId = UUID.fromString(rawUserId);
             UserDto updated = userService.updateUserProfile(userId, updateProfileRequest);
             return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 2.5 Change Password
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest requestParams, HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
+        }
+        try {
+            UUID userId = UUID.fromString(rawUserId);
+            userService.changePassword(userId, requestParams);
+            return ResponseEntity.ok("Password changed successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
