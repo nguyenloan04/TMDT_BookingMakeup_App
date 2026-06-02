@@ -49,4 +49,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<TopCustomerDTO> findTopCustomers(Pageable pageable);
     @Query("SELECT b FROM Booking b WHERE b.service.owner.userId = :ownerUserId")
     List<Booking> findByServiceOwnerUserId(@Param("ownerUserId") UUID ownerUserId);
+
+    List<Booking> findByArtistId(UUID artistId);
 }

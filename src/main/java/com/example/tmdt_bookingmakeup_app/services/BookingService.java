@@ -207,6 +207,11 @@ public class BookingService {
 
         return mapToDto(booking);
     }
+    public List<BookingDto> getBookingsByArtistId(UUID artistId) {
+        return bookingRepository.findByArtistId(artistId).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
     private BookingDto mapToDto(Booking booking) {
         BookingDto dto = new BookingDto();
         dto.setId(booking.getId());

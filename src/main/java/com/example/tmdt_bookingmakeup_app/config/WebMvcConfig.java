@@ -2,7 +2,9 @@ package com.example.tmdt_bookingmakeup_app.config;
 
 import com.example.tmdt_bookingmakeup_app.security.JwtHttpInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -12,12 +14,24 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private JwtHttpInterceptor jwtHttpInterceptor;
 
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // Protect endpoints such as profile updates, listings, bookings, etc.
         // Exclude authentication and registration pathways, public searches
         registry.addInterceptor(jwtHttpInterceptor)
-                .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**")
+                .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**","/artists/**")
                 .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id}", "/promotions", "/promotions/{id}", "/promotions/validate");
+    }
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins(allowedOrigins.split(",")) // Dùng split(",") để lỡ sau này bạn điền nhiều link
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

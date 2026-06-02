@@ -51,7 +51,7 @@ public class UserService {
             user.setGender(request.gender());
         }
         if (request.address() != null) {
-            user.setAddress(request.address());
+            user.setAddress(String.valueOf(request.address()));
         }
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -144,7 +144,7 @@ public class UserService {
             user.setActive(request.active());
         }
         if (request.address() != null) {
-            user.setAddress(request.address());
+            user.setAddress(String.valueOf(request.address()));
         }
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -173,7 +173,7 @@ public class UserService {
         dto.setVerified(user.isVerified());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
-        dto.setAddress(user.getAddress());
+        dto.setAddress(LocalDateTime.parse(user.getAddress()));
         dto.setTotalPoints(user.getTotalPoints());
         return dto;
     }
