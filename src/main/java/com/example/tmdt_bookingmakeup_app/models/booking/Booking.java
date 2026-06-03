@@ -1,5 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.models.booking;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.models.user.User;
@@ -51,6 +52,7 @@ public class Booking {
     @Column(name = "platform_fee")
     private Double platformFee;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "TEXT")
-    private String status;
+    private BookingStatus status;
 }

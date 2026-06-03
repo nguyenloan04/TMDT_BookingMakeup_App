@@ -95,7 +95,7 @@ public class SearchFilter {
         ServiceOwner owner = service.getOwner();
 
         // Lấy thông tin artist (lấy cái đầu tiên nếu có nhiều)
-        List<Artist> artists = artistRepository.findByOwner(owner);
+        List<Artist> artists = artistRepository.findByOwnerUserId(owner.getUserId());
         Artist artist = artists.isEmpty() ? null : artists.get(0);
 
         String artistName;
