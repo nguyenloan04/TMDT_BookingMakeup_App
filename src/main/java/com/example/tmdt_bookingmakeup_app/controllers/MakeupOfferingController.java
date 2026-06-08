@@ -3,7 +3,7 @@ package com.example.tmdt_bookingmakeup_app.controllers;
 import com.example.tmdt_bookingmakeup_app.dto.request.service.CreateServiceRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.service.UpdateServiceRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.service.ServiceDto;
-import com.example.tmdt_bookingmakeup_app.services.ServiceService;
+import com.example.tmdt_bookingmakeup_app.services.MakeupOfferingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,12 +14,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/services")
-public class ServiceController {
+public class MakeupOfferingController {
 
-    private final ServiceService serviceService;
+    private final MakeupOfferingService serviceService;
 
     @Autowired
-    public ServiceController(ServiceService serviceService) {
+    public MakeupOfferingController(MakeupOfferingService serviceService) {
         this.serviceService = serviceService;
     }
 

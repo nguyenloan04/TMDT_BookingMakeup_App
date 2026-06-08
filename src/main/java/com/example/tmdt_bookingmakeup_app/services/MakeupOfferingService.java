@@ -12,12 +12,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
-public class ServiceService {
+public class MakeupOfferingService {
 
     private final ServiceRepository serviceRepository;
 
     @Autowired
-    public ServiceService(ServiceRepository serviceRepository) {
+    public MakeupOfferingService(ServiceRepository serviceRepository) {
         this.serviceRepository = serviceRepository;
     }
 
