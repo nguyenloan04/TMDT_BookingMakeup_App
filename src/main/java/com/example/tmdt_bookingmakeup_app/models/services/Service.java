@@ -35,4 +35,10 @@ public class Service {
     private String category;
 
     private Integer duration;
+
+    @Column(name = "is_active")
+    private boolean isActive = true;
+
+    @Column(name = "rating")
+    private Double rating = 0.0;
 }
