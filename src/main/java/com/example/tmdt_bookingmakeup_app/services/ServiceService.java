@@ -72,7 +72,7 @@ public class ServiceService {
         ServiceDto dto = new ServiceDto();
         dto.setId(service.getId());
         if (service.getOwner() != null) {
-            dto.setOwnerId(service.getOwner().getId());
+            dto.setOwnerId(service.getOwner().getUserId());
         }
         dto.setName(service.getName());
         dto.setDescription(service.getDescription());

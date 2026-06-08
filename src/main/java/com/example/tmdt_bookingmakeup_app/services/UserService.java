@@ -188,7 +188,7 @@ public class UserService {
         dto.setVerified(user.isVerified());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
-        dto.setAddress(LocalDateTime.parse(user.getAddress()));
+        dto.setAddress(user.getAddress());
         dto.setTotalPoints(user.getTotalPoints());
         return dto;
     }
