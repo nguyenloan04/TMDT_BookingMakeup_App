@@ -71,8 +71,8 @@ public class BookingService {
         }
 
         double totalAmount = Math.max(0.0, basePrice - discountAmount);
-        double depositAmount = totalAmount * 0.2; // Default to 20% deposit
-        double platformFee = totalAmount * 0.05;  // Default to 5% platform fee
+        double depositAmount = totalAmount * 0.55; // tiền cọc, sẽ sửa lại sau gọi tiền cọc từ trang chi tiet dịch vụ, ko lấy cố định cọc
+        double platformFee = totalAmount * 0.15;  // 15% phí nền tảng (lấy 15 của tiền dịch vụ), sẽ lấy của artist
 
         // 4. Save Booking Entity
         Booking booking = new Booking();
