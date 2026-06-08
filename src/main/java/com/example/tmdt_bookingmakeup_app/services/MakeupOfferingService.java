@@ -12,12 +12,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
-public class ServiceService {
+public class MakeupOfferingService {
 
     private final ServiceRepository serviceRepository;
 
     @Autowired
-    public ServiceService(ServiceRepository serviceRepository) {
+    public MakeupOfferingService(ServiceRepository serviceRepository) {
         this.serviceRepository = serviceRepository;
     }
 
@@ -72,7 +72,7 @@ public class ServiceService {
         ServiceDto dto = new ServiceDto();
         dto.setId(service.getId());
         if (service.getOwner() != null) {
-            dto.setOwnerId(service.getOwner().getId());
+            dto.setOwnerId(service.getOwner().getUserId());
         }
         dto.setName(service.getName());
         dto.setDescription(service.getDescription());
