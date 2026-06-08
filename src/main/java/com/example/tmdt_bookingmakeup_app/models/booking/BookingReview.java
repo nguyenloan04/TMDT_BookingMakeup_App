@@ -49,4 +49,14 @@ public class BookingReview {
     @Column(name = "comment_tags", columnDefinition = "TEXT")
     private CommentTag tags;
 
+    @Column(name = "status")
+    private String status = "PENDING"; // APPROVED, PENDING, REJECTED
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+    }
 }
