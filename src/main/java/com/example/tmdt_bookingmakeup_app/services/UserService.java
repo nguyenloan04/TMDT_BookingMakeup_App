@@ -3,6 +3,7 @@ package com.example.tmdt_bookingmakeup_app.services;
 import com.example.tmdt_bookingmakeup_app.common.enums.UserRole;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.CreateUserRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateProfileRequest;
+import com.example.tmdt_bookingmakeup_app.dto.request.user.ChangePasswordRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateUserAdminRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto;
 import com.example.tmdt_bookingmakeup_app.models.user.User;
@@ -57,6 +58,20 @@ public class UserService {
 
         User updatedUser = userRepository.save(user);
         return mapToDto(updatedUser);
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        if (!PasswordEncryption.checkPassword(request.oldPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid old password");
+        }
+        
+        user.setPassword(PasswordEncryption.hashPassword(request.newPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     public UserDto getUserById(UUID userId) {

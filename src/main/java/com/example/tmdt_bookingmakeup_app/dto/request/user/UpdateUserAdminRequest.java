@@ -11,5 +11,5 @@ public record UpdateUserAdminRequest(
     Gender gender,
     UserRole role,
     Boolean active,
-    LocalDateTime address
+    String address
 ) {}

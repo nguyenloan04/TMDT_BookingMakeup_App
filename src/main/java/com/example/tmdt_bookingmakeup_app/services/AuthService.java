@@ -34,8 +34,8 @@ public class AuthService {
         if (!isPasswordMatch) {
             return new AuthResponse(false, "Wrong password or email", null);
         }
-        //FIXME: Add int value for UserRole
-        String jwtToken = jwtConfig.generateToken(targetUser.getId(), targetUser.getRole().ordinal());
+        int roleOrdinal = targetUser.getRole() != null ? targetUser.getRole().ordinal() : com.example.tmdt_bookingmakeup_app.common.enums.UserRole.ADMIN.ordinal();
+        String jwtToken = jwtConfig.generateToken(targetUser.getId(), roleOrdinal);
         AuthDto dto = getAuthDto(targetUser, jwtToken);
         return new AuthResponse(true, "Login success!", dto);
     }
@@ -50,6 +50,8 @@ public class AuthService {
         newUser.setEmail(input.email());
         newUser.setUsername(input.username());
         newUser.setPassword(PasswordEncryption.hashPassword(input.password()));
+        newUser.setRole(com.example.tmdt_bookingmakeup_app.common.enums.UserRole.ADMIN);
+        newUser.setActive(true);
         this.userRepository.save(newUser);
         return new AuthResponse(true, "Register success!", null);
     }

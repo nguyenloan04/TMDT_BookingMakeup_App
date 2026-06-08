@@ -8,5 +8,5 @@ public record UpdateProfileRequest(
     String avatarUrl,
     String phone,
     Gender gender,
-    LocalDateTime address
+    String address
 ) {}
