@@ -89,7 +89,7 @@ public class SearchFilter {
         return List.of("Trang điểm cô dâu", "Thời trang / Sự kiện", "Tiệc tối", "Khóa học");
     }
 
-    // ── Mapper ──────────────────────────────────────────────────────────────
+    // Mapper
 
     private MakeupService toMakeupService(Service service) {
         ServiceOwner owner = service.getOwner();
@@ -134,6 +134,8 @@ public class SearchFilter {
 
         return MakeupService.builder()
                 .id(service.getId() != null ? service.getId().getMostSignificantBits() & Long.MAX_VALUE : 0L)
+                .serviceUuid(service.getId())
+                .artistUuid(artist != null ? artist.getId() : null)
                 .title(service.getName())
                 .category(service.getCategory())
                 .categoryTag(tagInfo[0])
@@ -144,6 +146,7 @@ public class SearchFilter {
                 .rating(rating)
                 .reviewCount(reviewCount)
                 .priceFrom(service.getPrice() != null ? service.getPrice() : 0.0)
+                .duration(service.getDuration())
                 .imageUrl(imageUrl)
                 .location(location)
                 .description(service.getDescription() != null ? service.getDescription() : "")

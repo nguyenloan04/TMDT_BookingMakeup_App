@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/services")
-@CrossOrigin(origins = "*")
 public class SearchFilterController {
 
     private final SearchFilter searchService;

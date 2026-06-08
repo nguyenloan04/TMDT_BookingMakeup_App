@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.spring.boot.starter.websocket)
 //    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.spring.boot.starter.web)
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     testImplementation(libs.org.junit.jupiter.junit.jupiter.api)
     testImplementation(libs.org.junit.jupiter.junit.jupiter.engine)
