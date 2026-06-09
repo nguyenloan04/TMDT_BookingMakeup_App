@@ -23,7 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Exclude authentication and registration pathways, public searches
         registry.addInterceptor(jwtHttpInterceptor)
                 .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**","/artists/**")
-                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id}", "/promotions", "/promotions/{id}", "/promotions/validate", "/bookings/artist/**");
+                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id}", "/promotions", "/promotions/{id}", "/promotions/validate", "/bookings/artist/**", "/profile/artists/**");
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {
