@@ -63,4 +63,7 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
             @Param("minRating") Double minRating,
             Pageable pageable
     );
+
+    @Query("SELECT MIN(s.price) FROM Service s WHERE s.owner.userId = :ownerId AND s.isActive = true")
+    Double findMinPriceByOwnerId(@Param("ownerId") UUID ownerId);
 }
