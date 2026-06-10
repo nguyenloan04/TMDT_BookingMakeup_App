@@ -86,6 +86,8 @@ public class ArtistProfileController {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ"));
 
+        Artist artists = artistRepository.findByOwnerUserId(service.getOwner().getUserId()).stream().findFirst().orElse(null);
+
         UUID ownerId = service.getOwner().getUserId();
         List<Service> related = serviceRepository.findTop3ByOwnerUserIdAndIdNotAndIsActiveTrue(ownerId, serviceId);
 
@@ -110,6 +112,7 @@ public class ArtistProfileController {
                 .ownerName(service.getOwner().getUser() != null ? service.getOwner().getUser().getDisplayName() : "Studio")
                 .ownerAvatar(service.getOwner().getUser() != null ? service.getOwner().getUser().getAvatarUrl() : null)
                 .relatedServices(relatedDtos)
+                .mainThumbnailUrl(artists != null ? artists.getPortfolioImages() : null)
                 .build();
 
         return ResponseEntity.ok(response);

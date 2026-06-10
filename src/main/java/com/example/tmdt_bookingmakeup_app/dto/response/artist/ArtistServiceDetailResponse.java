@@ -17,5 +17,6 @@ public class ArtistServiceDetailResponse {
     private String ownerName;
     private String ownerAvatar;
     private List<ArtistServiceDTO> relatedServices;
+    private String mainThumbnailUrl;
 }
 
