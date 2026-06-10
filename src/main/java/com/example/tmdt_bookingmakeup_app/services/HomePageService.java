@@ -50,7 +50,7 @@ public class HomePageService {
                 .collect(Collectors.toList());
     }
 
-    private FeaturedArtistDto mapToFeaturedArtistDto(Artist a) {
+    public FeaturedArtistDto mapToFeaturedArtistDto(Artist a) {
         Double minPrice = 0.0;
         if (a.getOwner() != null && a.getOwner().getUserId() != null) {
             Double fetchedPrice = serviceRepository.findMinPriceByOwnerId(a.getOwner().getUserId());
