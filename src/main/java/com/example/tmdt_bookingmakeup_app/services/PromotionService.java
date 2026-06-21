@@ -75,6 +75,7 @@ public class PromotionService {
             throw new RuntimeException("Access Denied: You do not own this promotion");
         }
 
+        // Authorization check: Admin can update anything. Service owner can only update their own.
         if (request.discountValue() != null) {
             promotion.setDiscountValue(request.discountValue());
         }
@@ -102,6 +103,7 @@ public class PromotionService {
             throw new RuntimeException("Access Denied: You do not own this promotion");
         }
 
+        // Authorization check
         promotionRepository.delete(promotion);
     }
 
@@ -114,7 +116,7 @@ public class PromotionService {
         }
 
         // Check if requester is a ServiceOwner
-        boolean isServiceOwner = serviceOwnerRepository.existsById(requesterId);
+        boolean isServiceOwner = requesterId != null && serviceOwnerRepository.existsById(requesterId);
         if (isServiceOwner) {
             // Service Owner lists their own
             return promotionRepository.findByOwnerUserId(requesterId).stream()

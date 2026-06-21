@@ -1,6 +1,7 @@
 package com.example.tmdt_bookingmakeup_app.models.booking;
 
 import com.example.tmdt_bookingmakeup_app.common.enums.CommentTag;
+import com.example.tmdt_bookingmakeup_app.common.enums.ReviewStatus;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.models.user.User;
 import jakarta.persistence.*;
@@ -8,10 +9,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Check;
 
 import java.util.UUID;
 
-@Table(name = "booking_reviews")
+@Table(
+        name = "booking_reviews",
+        uniqueConstraints = @UniqueConstraint(name = "uk_booking_reviews_booking", columnNames = "booking_id"),
+        indexes = {
+                @Index(name = "idx_booking_reviews_artist_status", columnList = "artist_id,status"),
+                @Index(name = "idx_booking_reviews_customer", columnList = "customer_id"),
+                @Index(name = "idx_booking_reviews_created_at", columnList = "created_at")
+        }
+)
+@Check(constraints = "booking_rating BETWEEN 1 AND 5 AND artist_rating BETWEEN 1 AND 5")
 @Entity
 @Getter
 @Setter
@@ -33,11 +44,11 @@ public class BookingReview {
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
 
-    @Column(nullable = false)
-    private Integer booking_rating;
+    @Column(name = "booking_rating", nullable = false)
+    private Integer bookingRating;
 
-    @Column(nullable = false)
-    private Integer artist_rating;
+    @Column(name = "artist_rating", nullable = false)
+    private Integer artistRating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -49,10 +60,11 @@ public class BookingReview {
     @Column(name = "comment_tags", columnDefinition = "TEXT")
     private CommentTag tags;
 
-    @Column(name = "status")
-    private String status = "PENDING"; // APPROVED, PENDING, REJECTED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ReviewStatus status = ReviewStatus.PENDING;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
 
     @PrePersist

@@ -4,8 +4,11 @@ import com.example.tmdt_bookingmakeup_app.dto.request.service.CreateServiceReque
 import com.example.tmdt_bookingmakeup_app.dto.request.service.UpdateServiceRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.service.ServiceDto;
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
+import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceRepository;
+import com.example.tmdt_bookingmakeup_app.repositories.ServiceOwnerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +18,12 @@ import java.util.stream.Collectors;
 public class MakeupOfferingService {
 
     private final ServiceRepository serviceRepository;
+    private final ServiceOwnerRepository serviceOwnerRepository;
 
     @Autowired
-    public MakeupOfferingService(ServiceRepository serviceRepository) {
+    public MakeupOfferingService(ServiceRepository serviceRepository, ServiceOwnerRepository serviceOwnerRepository) {
         this.serviceRepository = serviceRepository;
+        this.serviceOwnerRepository = serviceOwnerRepository;
     }
 
     public List<ServiceDto> getAllServices() {
@@ -33,7 +38,11 @@ public class MakeupOfferingService {
         return mapToDto(service);
     }
 
-    public ServiceDto createService(CreateServiceRequest request) {
+    @Transactional
+    public ServiceDto createService(CreateServiceRequest request, UUID ownerId) {
+        ServiceOwner owner = serviceOwnerRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("ServiceOwner not found with id: " + ownerId));
+
         Service service = new Service();
         service.setName(request.name());
         service.setDescription(request.description());
@@ -42,14 +51,20 @@ public class MakeupOfferingService {
         service.setDuration(request.duration());
         service.setActive(true);
         service.setRating(0.0);
+        service.setOwner(owner);
         
         Service saved = serviceRepository.save(service);
         return mapToDto(saved);
     }
 
-    public ServiceDto updateService(UUID id, UpdateServiceRequest request) {
+    @Transactional
+    public ServiceDto updateService(UUID id, UpdateServiceRequest request, UUID requesterId) {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+        
+        if (service.getOwner() == null || !service.getOwner().getUserId().equals(requesterId)) {
+            throw new RuntimeException("Access Denied: You do not own this service");
+        }
         
         if (request.name() != null) service.setName(request.name());
         if (request.description() != null) service.setDescription(request.description());
@@ -62,13 +77,24 @@ public class MakeupOfferingService {
         return mapToDto(updated);
     }
 
-    public void deleteService(UUID id) {
+    @Transactional
+    public void deleteService(UUID id, UUID requesterId) {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+        
+        if (service.getOwner() == null || !service.getOwner().getUserId().equals(requesterId)) {
+            throw new RuntimeException("Access Denied: You do not own this service");
+        }
         serviceRepository.delete(service);
     }
 
-    private ServiceDto mapToDto(Service service) {
+    public List<ServiceDto> getServicesByOwnerId(UUID ownerId) {
+        return serviceRepository.findByOwnerUserId(ownerId).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public ServiceDto mapToDto(Service service) {
         ServiceDto dto = new ServiceDto();
         dto.setId(service.getId());
         if (service.getOwner() != null) {

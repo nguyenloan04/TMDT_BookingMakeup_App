@@ -70,5 +70,7 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
 
     List<Service> findByOwnerUserIdAndIsActiveTrue(UUID ownerId);
 
+    List<Service> findByOwnerUserId(UUID ownerId);
+
     List<Service> findTop3ByOwnerUserIdAndIdNotAndIsActiveTrue(UUID ownerId, UUID serviceId);
 }
