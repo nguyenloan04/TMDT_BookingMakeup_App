@@ -20,16 +20,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/profile/artists")
+@RequestMapping("/profile/providers")
 @RequiredArgsConstructor
-public class ArtistProfileController {
+public class ServiceProviderController {
 
     private final ServiceOwnerRepository ownerRepository;
     private final ArtistRepository artistRepository;
     private final ServiceRepository serviceRepository;
     private final HomePageService homePageService;
 
-    @GetMapping("/providers/{artistId}")
+    @GetMapping("/{artistId}")
     public ResponseEntity<ArtistProfileResponse> getProviderProfile(@PathVariable UUID artistId) {
         // 1. Tìm Artist dựa trên ID từ URL truyền xuống
         Artist currentArtist = artistRepository.findById(artistId)
