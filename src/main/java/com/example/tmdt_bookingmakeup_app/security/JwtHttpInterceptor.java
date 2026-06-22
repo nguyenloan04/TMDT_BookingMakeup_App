@@ -37,6 +37,16 @@ public class JwtHttpInterceptor implements HandlerInterceptor {
                 return true;
             }
         }
+
+        // The promotion listing is public. If a valid token is supplied above,
+        // the controller still receives the user identity and can apply admin/
+        // service-owner rules. Without a token it returns active promotions.
+        if (HttpMethod.GET.matches(request.getMethod())
+                && ("/promotions".equals(request.getRequestURI())
+                    || "/services".equals(request.getRequestURI()))) {
+            return true;
+        }
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write("Unauthorized: Token is missing or invalid");
         return false;

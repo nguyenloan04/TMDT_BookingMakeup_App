@@ -10,5 +10,4 @@ public class TmdtBookingMakeupAppApplication {
     public static void main(String[] args) {
         SpringApplication.run(TmdtBookingMakeupAppApplication.class, args);
     }
-
 }

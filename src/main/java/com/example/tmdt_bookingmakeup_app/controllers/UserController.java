@@ -7,7 +7,9 @@ import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateRoleRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateStatusRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateUserAdminRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.user.ChangePasswordRequest;
+import com.example.tmdt_bookingmakeup_app.dto.request.user.UpdateServiceOwnerProfileRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto;
+import com.example.tmdt_bookingmakeup_app.dto.response.user.ServiceOwnerProfileDto;
 import com.example.tmdt_bookingmakeup_app.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +56,38 @@ public class UserController {
         try {
             UUID userId = UUID.fromString(rawUserId);
             UserDto updated = userService.updateUserProfile(userId, updateProfileRequest);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 2.1 Get Current Service Owner Profile
+    @GetMapping("/profile/service-owner")
+    public ResponseEntity<?> getServiceOwnerProfile(HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
+        }
+        try {
+            UUID userId = UUID.fromString(rawUserId);
+            ServiceOwnerProfileDto profile = userService.getServiceOwnerProfile(userId);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 2.2 Update Current Service Owner Profile
+    @PutMapping("/profile/service-owner")
+    public ResponseEntity<?> updateServiceOwnerProfile(@RequestBody UpdateServiceOwnerProfileRequest updateRequest, HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
+        }
+        try {
+            UUID userId = UUID.fromString(rawUserId);
+            ServiceOwnerProfileDto updated = userService.updateServiceOwnerProfile(userId, updateRequest);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
