@@ -8,6 +8,7 @@ import com.example.tmdt_bookingmakeup_app.dto.request.promotion.ValidatePromotio
 import com.example.tmdt_bookingmakeup_app.dto.response.booking.BookingDto;
 import com.example.tmdt_bookingmakeup_app.dto.response.promotion.PromotionValidationResponse;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
+import com.example.tmdt_bookingmakeup_app.models.promotion.Promotion;
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.models.user.User;
@@ -35,6 +36,7 @@ public class BookingService {
     private final ArtistRepository artistRepository;
     private final ServiceOwnerRepository serviceOwnerRepository;
     private final PromotionService promotionService;
+    private final PromotionRepository promotionRepository;
 
     public BookingDto createBooking(CreateBookingRequest request, UUID customerId) {
         // 1. Fetch user, service and artist
@@ -55,19 +57,30 @@ public class BookingService {
         double basePrice = service.getPrice();
         double discountAmount = 0.0;
 
+        Promotion appliedPromo = null;
+        int pointsToDeduct = 0;
         if (request.promoCode() != null && !request.promoCode().trim().isEmpty()) {
             UUID ownerId = service.getOwner() != null ? service.getOwner().getUserId() : null;
-            ValidatePromotionRequest valRequest = new ValidatePromotionRequest(
-                    request.promoCode(),
-                    basePrice,
-                    ownerId
-            );
+            ValidatePromotionRequest valRequest = new ValidatePromotionRequest(request.promoCode(), basePrice, ownerId);
+
             PromotionValidationResponse valResponse = promotionService.validatePromotion(valRequest);
-            if (valResponse.isValid()) {
-                discountAmount = valResponse.getDiscountAmount();
-            } else {
-                throw new RuntimeException("Không thể áp dụng mã giảm giá: " + valResponse.getErrorMessage());
+            if (!valResponse.isValid()) {
+                throw new RuntimeException("Không thể áp dụng mã: " + valResponse.getErrorMessage());
             }
+
+            appliedPromo = promotionRepository.findByCode(request.promoCode())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy mã khuyến mãi"));
+
+            // Check xem mã có tốn điểm không
+            if (appliedPromo.getPointCharge() != null && appliedPromo.getPointCharge() > 0) {
+                int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+                if (currentPoints < appliedPromo.getPointCharge()) {
+                    throw new RuntimeException("Bạn không đủ điểm để đổi mã khuyến mãi này!");
+                }
+                pointsToDeduct = appliedPromo.getPointCharge();
+            }
+
+            discountAmount = valResponse.getDiscountAmount();
         }
 
         double totalAmount = Math.max(0.0, basePrice - discountAmount);
@@ -86,6 +99,8 @@ public class BookingService {
         booking.setDepositAmount(depositAmount);
         booking.setPlatformFee(platformFee);
         booking.setStatus(BookingStatus.valueOf(BookingStatus.PENDING.name()));
+        booking.setPromotion(appliedPromo);
+        booking.setUsedPoints(pointsToDeduct);
 
         Booking saved = bookingRepository.save(booking);
         return mapToDto(saved);
@@ -113,58 +128,130 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
+//    public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole requesterRole) {
+//        Booking booking = bookingRepository.findById(bookingId)
+//                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+//
+//        String newStatus = request.status().toUpperCase().trim();
+//        String currentStatus = String.valueOf(booking.getStatus());
+//
+//        // 1. If requester is Admin: allowed to change to any status
+//        if (requesterRole == UserRole.ADMIN) {
+//            booking.setStatus(BookingStatus.valueOf(newStatus));
+//            Booking saved = bookingRepository.save(booking);
+//            return mapToDto(saved);
+//        }
+//
+//        // 2. If requester is the Customer
+//        if (booking.getCustomer().getId().equals(requesterId)) {
+//            if (!newStatus.equals("CANCELLED")) {
+//                throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
+//            }
+//            if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
+//                throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
+//            }
+//            booking.setStatus(BookingStatus.valueOf("CANCELLED"));
+//            Booking saved = bookingRepository.save(booking);
+//            return mapToDto(saved);
+//        }
+//
+//        // 3. If requester is the ServiceOwner
+//        UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
+//        if (requesterId.equals(ownerId)) {
+//            if (newStatus.equals("CONFIRMED")) {
+//                if (!currentStatus.equals("PENDING")) {
+//                    throw new RuntimeException("Cannot confirm booking from status: " + currentStatus);
+//                }
+//            } else if (newStatus.equals("COMPLETED")) {
+//                if (!currentStatus.equals("CONFIRMED")) {
+//                    throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
+//                }
+//            } else if (newStatus.equals("CANCELLED")) {
+//                if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
+//                    throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
+//                }
+//            } else {
+//                throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
+//            }
+//
+//            booking.setStatus(BookingStatus.valueOf(newStatus));
+//            Booking saved = bookingRepository.save(booking);
+//            return mapToDto(saved);
+//        }
+//
+//        throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
+//    }
+
+
     public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole requesterRole) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
 
-        String newStatus = request.status().toUpperCase().trim();
-        String currentStatus = String.valueOf(booking.getStatus());
+        BookingStatus newStatus = BookingStatus.valueOf(request.status().toUpperCase().trim());
+        BookingStatus currentStatus = booking.getStatus();
 
-        // 1. If requester is Admin: allowed to change to any status
-        if (requesterRole == UserRole.ADMIN) {
-            booking.setStatus(BookingStatus.valueOf(newStatus));
-            Booking saved = bookingRepository.save(booking);
-            return mapToDto(saved);
+        if (requesterRole != UserRole.ADMIN) {
+            // 1. If requester is the Customer
+            if (booking.getCustomer().getId().equals(requesterId)) {
+                if (newStatus != BookingStatus.CANCELLED) {
+                    throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
+                }
+                if (currentStatus != BookingStatus.PENDING && currentStatus != BookingStatus.CONFIRMED) {
+                    throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
+                }
+            }
+            // 2. If requester is the ServiceOwner
+            else {
+                UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
+                if (requesterId.equals(ownerId)) {
+                    switch (newStatus) {
+                        case CONFIRMED -> {
+                            if (currentStatus != BookingStatus.PENDING) {
+                                throw new RuntimeException("Cannot confirm booking from status: " + currentStatus);
+                            }
+                        }
+                        case COMPLETED -> {
+                            if (currentStatus != BookingStatus.CONFIRMED) {
+                                throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
+                            }
+                        }
+                        case CANCELLED -> {
+                            if (currentStatus != BookingStatus.PENDING && currentStatus != BookingStatus.CONFIRMED) {
+                                throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
+                            }
+                        }
+                        default ->
+                                throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
+                    }
+                } else {
+                    throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
+                }
+            }
         }
 
-        // 2. If requester is the Customer
-        if (booking.getCustomer().getId().equals(requesterId)) {
-            if (!newStatus.equals("CANCELLED")) {
-                throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
-            }
-            if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
-                throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
-            }
-            booking.setStatus(BookingStatus.valueOf("CANCELLED"));
-            Booking saved = bookingRepository.save(booking);
-            return mapToDto(saved);
+        //Pass condition:
+        //If current user role is Admin
+        //If current user role is Customer or Service Owner: Update exact allowed status permitted
+
+        booking.setStatus(newStatus);
+
+        User customer = booking.getCustomer();
+
+        if (newStatus == BookingStatus.CANCELLED && booking.getUsedPoints() != null && booking.getUsedPoints() > 0) {
+            int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+            customer.setTotalPoints(currentPoints + booking.getUsedPoints());
+            userRepository.save(customer);
         }
 
-        // 3. If requester is the ServiceOwner
-        UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
-        if (requesterId.equals(ownerId)) {
-            if (newStatus.equals("CONFIRMED")) {
-                if (!currentStatus.equals("PENDING")) {
-                    throw new RuntimeException("Cannot confirm booking from status: " + currentStatus);
-                }
-            } else if (newStatus.equals("COMPLETED")) {
-                if (!currentStatus.equals("CONFIRMED")) {
-                    throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
-                }
-            } else if (newStatus.equals("CANCELLED")) {
-                if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
-                    throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
-                }
-            } else {
-                throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
-            }
-
-            booking.setStatus(BookingStatus.valueOf(newStatus));
-            Booking saved = bookingRepository.save(booking);
-            return mapToDto(saved);
+        if (newStatus == BookingStatus.COMPLETED) {
+            int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+            int pointsEarned = (int) (booking.getTotalAmount() / 10000);
+            customer.setTotalPoints(currentPoints + pointsEarned);
+            userRepository.save(customer);
         }
 
-        throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
+        Booking saved = bookingRepository.save(booking);
+        return mapToDto(saved);
     }
 
     public List<BookingDto> getBookings(UUID requesterId, UserRole requesterRole) {
