@@ -3,7 +3,9 @@ package com.example.tmdt_bookingmakeup_app.controllers.payment;
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
 import com.example.tmdt_bookingmakeup_app.services.payment.PaymentService;
 import com.google.gson.JsonObject;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +24,26 @@ public class PaymentController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<String> generatePayment(@RequestBody Map<String, String> params) {
-        return ResponseEntity.ok(paymentService.generatePayment(params));
+    public ResponseEntity<String> generatePayment(
+            @RequestBody Map<String, String> payload,
+            HttpServletRequest request) {
+
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
+        }
+
+        try {
+            UUID customerId = UUID.fromString(rawUserId);
+            UUID bookingId = UUID.fromString(payload.get("bookingId"));
+            String bankCode = payload.get("bankCode");
+            String locale = payload.get("locale");
+
+            String result = paymentService.generatePayment(bookingId, customerId, bankCode, locale);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"Invalid Request\"}");
+        }
     }
 
     @GetMapping("/result")

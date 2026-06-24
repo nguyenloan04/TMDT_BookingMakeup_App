@@ -69,6 +69,7 @@ public class User {
         avatarUrl = "";
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        role = UserRole.USER;
         totalPoints = 0;
     }
 }
