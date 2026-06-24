@@ -37,6 +37,7 @@ public class CloudinaryService {
             String signature = cloudinary.apiSignRequest(listUrlParams, props.getSecret(), 2);
             listUrlParams.put("signature", signature);
             listUrlParams.put("api_key", props.getApiKey());
+            listUrlParams.put("cloud_name", props.getName());
 
             return listUrlParams;
         }
