@@ -145,32 +145,34 @@ public class PromotionService {
     public PromotionValidationResponse validatePromotion(ValidatePromotionRequest request) {
         Optional<Promotion> promoOpt = promotionRepository.findByCode(request.code().toUpperCase().trim());
         if (promoOpt.isEmpty()) {
-            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi không tồn tại");
+            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi không tồn tại", 0);
         }
 
         Promotion promo = promoOpt.get();
 
         // 1. Expiry date check
         if (promo.getExpiryDate() != null && promo.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi đã hết hạn");
+            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi đã hết hạn", 0);
         }
 
         // 2. Shop/owner check
         if (request.ownerId() != null && promo.getOwner() != null && !promo.getOwner().getUserId().equals(request.ownerId())) {
-            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi không áp dụng cho cửa hàng này");
+            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Mã khuyến mãi không áp dụng cho cửa hàng này", 0);
         }
 
         // 3. Minimum booking amount check
         double minVal = promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0.0;
         if (request.bookingAmount() < minVal) {
-            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Giá trị đơn đặt lịch chưa đạt tối thiểu: " + String.format("%,.0f VNĐ", minVal));
+            return new PromotionValidationResponse(false, 0.0, request.bookingAmount(), "Giá trị đơn đặt lịch chưa đạt tối thiểu: " + String.format("%,.0f VNĐ", minVal), 0);
         }
 
         // 4. Calculate final values
         double discount = promo.getDiscountValue() != null ? promo.getDiscountValue() : 0.0;
         double finalAmount = Math.max(0.0, request.bookingAmount() - discount);
 
-        return new PromotionValidationResponse(true, discount, finalAmount, null);
+        int pointsNeeded = promo.getPointCharge() != null ? promo.getPointCharge() : 0;
+
+        return new PromotionValidationResponse(true, discount, finalAmount, null, pointsNeeded);
     }
 
     private PromotionDto mapToDto(Promotion promotion) {
