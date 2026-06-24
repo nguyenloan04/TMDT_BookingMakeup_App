@@ -2,7 +2,6 @@ package com.example.tmdt_bookingmakeup_app.controllers.payment;
 
 import com.example.tmdt_bookingmakeup_app.services.payment.PaymentIPNService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,13 +14,9 @@ import java.util.Map;
 @RequestMapping("/")
 @RequiredArgsConstructor
 public class PaymentIPN {
-    PaymentIPNService paymentIPNService;
+    private final PaymentIPNService paymentIPNService;
 
-    @Autowired
-    public PaymentIPN(PaymentIPNService paymentIPNService) {
-        this.paymentIPNService = paymentIPNService;
-    }
-
+    // Update status to BookingStatus.PAID_DEPOSIT
     @GetMapping("/vnpay_ipn")
     public ResponseEntity<String> createPaymentIPN(@RequestParam Map<String, String> allParams) {
         return ResponseEntity.ok(paymentIPNService.generatePaymentIpn(allParams));

@@ -1,8 +1,10 @@
 package com.example.tmdt_bookingmakeup_app.services.payment;
 
-import com.example.tmdt_bookingmakeup_app.common.enums.OrderStatus;
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
+import com.example.tmdt_bookingmakeup_app.common.enums.PaymentStatus;
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
-import com.example.tmdt_bookingmakeup_app.services.OrderService;
+import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
+import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
 import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,53 +15,52 @@ import java.util.UUID;
 
 @Service
 public class PaymentIPNService {
-    private final OrderService orderService;
+    private final BookingRepository bookingRepository;
 
     @Autowired
-    public PaymentIPNService(OrderService orderService) {
-        this.orderService = orderService;
+    public PaymentIPNService(BookingRepository bookingRepository) {
+        this.bookingRepository = bookingRepository;
     }
 
     public String generatePaymentIpn(Map<String, String> allParams) {
         JsonObject json = new JsonObject();
         String rspCode;
         String message;
+
         try {
             Map<String, String> fields = new HashMap<>(allParams);
-
             String vnpSecureHash = allParams.get("vnp_SecureHash");
             fields.remove("vnp_SecureHashType");
             fields.remove("vnp_SecureHash");
-            //Checksum
+
+            // Checksum
             String signValue = VNPayConfig.generateHmacSHA512(fields.keySet().toString(), fields.values().toString());
 
             if (signValue.equals(vnpSecureHash)) {
+                // Get Booking ID
+                String requestBookingId = allParams.get("vnp_TxnRef");
+                UUID bookingId = UUID.fromString(requestBookingId);
 
-                String requestOrderStatus = allParams.get("orderStatus");
-                String requestOrderId = allParams.get("orderId");
-                String requestsAmount = allParams.get("amount");
-                UUID orderId = UUID.fromString(requestOrderId);
-                int amount = requestsAmount != null ? Integer.parseInt(requestsAmount) : -1;
-                OrderStatus orderStatus = requestOrderStatus != null && OrderStatus.PENDING.getValue() == Integer.parseInt(requestOrderStatus) ? OrderStatus.PENDING : null;
+                Booking booking = bookingRepository.findById(bookingId).orElse(null);
 
-                boolean checkOrderId = orderService.getOrderById(orderId) != null; // vnp_TxnRef exists in your database
-                boolean checkAmount = amount != -1; // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the amount of the code (vnp_TxnRef) in Your database).
-                //FIXME: Fix business logic here
-                boolean checkOrderStatus = orderStatus == OrderStatus.CONFIRMED; // PaymnentStatus = 0 (pending)
+                if (booking != null) {
+                    long vnpAmount = Long.parseLong(allParams.get("vnp_Amount")) / 100;
+                    long dbDepositAmount = Math.round(booking.getDepositAmount());
 
-                if (checkOrderId) {
-                    if (checkAmount) {
-                        if (checkOrderStatus) {
+                    if (vnpAmount == dbDepositAmount) {
+                        if (booking.getStatus() == BookingStatus.PENDING) {
                             if ("00".equals(allParams.get("vnp_ResponseCode"))) {
-                                orderService.updateStatus(orderId, OrderStatus.PAID);
+                                booking.setStatus(BookingStatus.PAID_DEPOSIT);
+                                bookingRepository.save(booking);
+                                rspCode = "00";
+                                message = "Confirm Success";
                             } else {
-                                orderService.updateStatus(orderId, OrderStatus.PENDING);
+                                rspCode = "00";
+                                message = "Payment failed";
                             }
-                            rspCode = "00";
-                            message = "Confirm Success";
                         } else {
                             rspCode = "02";
-                            message = "Order already confirmed";
+                            message = "Booking already confirmed or paid";
                         }
                     } else {
                         rspCode = "04";
@@ -67,21 +68,19 @@ public class PaymentIPNService {
                     }
                 } else {
                     rspCode = "01";
-                    message = "Order not Found";
+                    message = "Booking not Found";
                 }
             } else {
                 rspCode = "97";
                 message = "Invalid Checksum";
             }
+
             json.addProperty("rspCode", rspCode);
             json.addProperty("message", message);
             return json.toString();
-        }
-        catch (Exception e) {
-            rspCode = "99";
-            message = "Unknown error";
-            json.addProperty("rspCode", rspCode);
-            json.addProperty("message", message);
+        } catch (Exception e) {
+            json.addProperty("rspCode", "99");
+            json.addProperty("message", "Unknown error");
             return json.toString();
         }
     }
