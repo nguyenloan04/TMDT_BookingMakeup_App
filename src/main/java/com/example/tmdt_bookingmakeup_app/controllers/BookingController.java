@@ -4,6 +4,7 @@ import com.example.tmdt_bookingmakeup_app.dto.request.booking.CreateBookingReque
 import com.example.tmdt_bookingmakeup_app.dto.request.booking.UpdateBookingStatusRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.booking.BookingDto;
 import com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto;
+import com.example.tmdt_bookingmakeup_app.security.JwtConfig;
 import com.example.tmdt_bookingmakeup_app.services.BookingService;
 import com.example.tmdt_bookingmakeup_app.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,11 +22,13 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final UserService userService;
+    private final JwtConfig jwtConfig;
 
     @Autowired
-    public BookingController(BookingService bookingService, UserService userService) {
+    public BookingController(BookingService bookingService, UserService userService,JwtConfig jwtConfig) {
         this.bookingService = bookingService;
         this.userService = userService;
+        this.jwtConfig= jwtConfig;
     }
 
     // 1. Place a Booking
@@ -99,13 +102,22 @@ public class BookingController {
     }
     @GetMapping("/artist/{artistId}")
     public ResponseEntity<?> getBookingsByArtist(@PathVariable UUID artistId, HttpServletRequest request) {
-        String rawUserId = (String) request.getAttribute("userId");
-        if (rawUserId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
-        }
         try {
-            List<BookingDto> bookings = bookingService.getBookingsByArtistId(artistId);
+            String requesterId = null;
+            // Tự đọc Header để xem khách có mang thẻ (Token) không
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                // Nếu có token hợp lệ, giải mã lấy ID người dùng
+                if (jwtConfig.isValid(token)) {
+                    requesterId = jwtConfig.extractUserId(token).toString();
+                }
+            }
+
+            // Truyền ID người yêu cầu xuống Service để nó tự quyết định có che dữ liệu hay không
+            List<BookingDto> bookings = bookingService.getBookingsByArtistId(artistId, requesterId);
             return ResponseEntity.ok(bookings);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

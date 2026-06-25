@@ -300,10 +300,35 @@ public class BookingService {
 
         return mapToDto(booking);
     }
-    public List<BookingDto> getBookingsByArtistId(UUID artistId) {
-        return bookingRepository.findByArtistId(artistId).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public List<BookingDto> getBookingsByArtistId(UUID artistId, String requesterId) {
+        List<Booking> bookings = bookingRepository.findByArtistId(artistId);
+
+        return bookings.stream().map(booking -> {
+            // Cứ map ra DTO đầy đủ trước bằng hàm của bạn
+            BookingDto dto = mapToDto(booking);
+
+            // Kiểm tra xem người đang xem có phải là Chủ tiệm (SO) không
+            boolean isOwner = false;
+            if (requesterId != null) {
+                UUID ownerId = booking.getService() != null && booking.getService().getOwner() != null
+                        ? booking.getService().getOwner().getUserId() : null;
+
+                if (ownerId != null && ownerId.toString().equals(requesterId)) {
+                    isOwner = true;
+                }
+            }
+
+            // Nếu KHÔNG PHẢI chủ tiệm (là khách vãng lai hoặc user thường) -> Che dữ liệu lại!
+            if (!isOwner) {
+                dto.setCustomerId(null);
+                dto.setCustomerDisplayName("Khách hàng (Bảo mật)");
+                dto.setTotalAmount(null);
+                dto.setDepositAmount(null);
+                dto.setPlatformFee(null);
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
     }
     private BookingDto mapToDto(Booking booking) {
         BookingDto dto = new BookingDto();
