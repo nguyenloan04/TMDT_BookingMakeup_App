@@ -12,4 +12,5 @@ public class PromotionValidationResponse {
     private Double discountAmount;
     private Double finalAmount;
     private String errorMessage;
+    private int pointCharge;
 }

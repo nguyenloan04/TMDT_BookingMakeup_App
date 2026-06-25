@@ -22,8 +22,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Protect endpoints such as profile updates, listings, bookings, etc.
         // Exclude authentication and registration pathways, public searches
         registry.addInterceptor(jwtHttpInterceptor)
-                .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**", "/artists/**", "/services/**", "/favourites/**", "/reviews/**")
-                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id:[a-fA-F0-9-]+}", "/promotions/{id:[a-fA-F0-9-]+}", "/promotions/validate", "/bookings/artist/**", "/profile/providers/**", "/services/{id:[a-fA-F0-9-]+}", "/reviews/service/{serviceId:[a-fA-F0-9-]+}", "/reviews/artist/{artistId:[a-fA-F0-9-]+}","/bookings/artist/**");
+                .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**", "/artists/**", "/services/**", "/favourites/**", "/reviews/**", "/payment/**")
+                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id:[a-fA-F0-9-]+}", "/promotions/{id:[a-fA-F0-9-]+}", "/promotions/validate", "/bookings/artist/**", "/profile/providers/**", "/services/{id:[a-fA-F0-9-]+}", "/reviews/service/{serviceId:[a-fA-F0-9-]+}", "/reviews/artist/{artistId:[a-fA-F0-9-]+}");
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {

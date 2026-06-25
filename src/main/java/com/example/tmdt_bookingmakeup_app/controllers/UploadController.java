@@ -21,6 +21,47 @@ public class UploadController {
         this.service = service;
     }
 
+    @GetMapping("/signature/identity")
+    public ResponseEntity<String> getIdentityUploadSignature(
+            @RequestParam("fileName") String fileName
+    ) {
+        JsonObject result = new JsonObject();
+        try {
+            String sanitizedFileName = fileName == null
+                    ? "identity_" + System.currentTimeMillis()
+                    : fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+            if (sanitizedFileName.isBlank()) {
+                sanitizedFileName = "identity_" + System.currentTimeMillis();
+            }
+
+            Map<String, Object> listParam = service.generateSignature(
+                    "service-owner/identity",
+                    sanitizedFileName,
+                    "image"
+            );
+
+            if (listParam != null) {
+                result = new Gson().toJsonTree(listParam).getAsJsonObject();
+                result.addProperty("result", true);
+            } else {
+                result.addProperty("result", false);
+            }
+
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", "application/json")
+                    .body(result.toString());
+        } catch (Exception e) {
+            result.addProperty("result", false);
+            result.addProperty("message", e.getMessage());
+            return ResponseEntity
+                    .status(500)
+                    .header("Content-Type", "application/json")
+                    .body(result.toString());
+        }
+    }
+
     @GetMapping("/get-upload-url")
     public ResponseEntity<String> getUploadUrl(
             @RequestAttribute("userId") String id,

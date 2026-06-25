@@ -2,6 +2,7 @@ package com.example.tmdt_bookingmakeup_app.controllers;
 
 import com.example.tmdt_bookingmakeup_app.dto.request.auth.LoginRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.auth.RegisterRequest;
+import com.example.tmdt_bookingmakeup_app.dto.request.auth.RegisterServiceOwnerRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.auth.AuthResponse;
 import com.example.tmdt_bookingmakeup_app.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,14 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest registerRequest) {
         AuthResponse response = this.authService.register(registerRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register/service-owner")
+    public ResponseEntity<AuthResponse> registerServiceOwner(
+            @RequestBody RegisterServiceOwnerRequest registerServiceOwnerRequest
+    ) {
+        AuthResponse response = this.authService.registerServiceOwner(registerServiceOwnerRequest);
         return ResponseEntity.ok(response);
     }
 }

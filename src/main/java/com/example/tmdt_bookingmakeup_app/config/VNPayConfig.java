@@ -30,7 +30,7 @@ public class VNPayConfig {
         while (itr.hasNext()) {
             String fieldName = itr.next();
             String fieldValue = fields.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 sb.append(fieldName);
                 sb.append("=");
                 sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
