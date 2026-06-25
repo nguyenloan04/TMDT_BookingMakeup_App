@@ -24,25 +24,23 @@ public class PaymentController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<String> generatePayment(
+    public ResponseEntity<?> generatePayment(
             @RequestBody Map<String, String> payload,
             HttpServletRequest request) {
 
         String rawUserId = (String) request.getAttribute("userId");
         if (rawUserId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Unauthorized"));
         }
 
         try {
             UUID customerId = UUID.fromString(rawUserId);
             UUID bookingId = UUID.fromString(payload.get("bookingId"));
-            String bankCode = payload.get("bankCode");
-            String locale = payload.get("locale");
 
-            String result = paymentService.generatePayment(bookingId, customerId, bankCode, locale);
+            Map<String, Object> result = paymentService.generatePaymentData(bookingId, customerId);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"Invalid Request\"}");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
 
