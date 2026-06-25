@@ -7,6 +7,7 @@ import com.example.tmdt_bookingmakeup_app.dto.response.artist.ArtistServiceDetai
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
+import com.example.tmdt_bookingmakeup_app.models.user.User;
 import com.example.tmdt_bookingmakeup_app.repositories.ArtistRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceOwnerRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceRepository;
@@ -101,6 +102,7 @@ public class ServiceProviderController {
                         .build()
         ).collect(Collectors.toList());
 
+        User owner = service.getOwner().getUser();
         ArtistServiceDetailResponse response = ArtistServiceDetailResponse.builder()
                 .serviceId(service.getId().toString())
                 .name(service.getName())
@@ -109,10 +111,13 @@ public class ServiceProviderController {
                 .duration(service.getDuration() != null ? service.getDuration() : 60)
                 .category(service.getCategory())
                 .ownerId(ownerId.toString())
-                .ownerName(service.getOwner().getUser() != null ? service.getOwner().getUser().getDisplayName() : "Studio")
-                .ownerAvatar(service.getOwner().getUser() != null ? service.getOwner().getUser().getAvatarUrl() : null)
+                .ownerName(owner != null ? owner.getDisplayName() : "Studio")
+                .ownerAvatar(owner != null ? owner.getAvatarUrl() : null)
                 .relatedServices(relatedDtos)
                 .mainThumbnailUrl(artists != null ? artists.getPortfolioImages() : null)
+                .rating(artists != null ? artists.getAverageRating() : 0)
+                .reviewCount(artists != null ? artists.getReviewCount() : 0)
+                .address(owner != null ? owner.getAddress() : "")
                 .build();
 
         return ResponseEntity.ok(response);

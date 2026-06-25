@@ -18,5 +18,8 @@ public class ArtistServiceDetailResponse {
     private String ownerAvatar;
     private List<ArtistServiceDTO> relatedServices;
     private String mainThumbnailUrl;
+    private double rating;
+    private int reviewCount;
+    private String address;
 }
 
