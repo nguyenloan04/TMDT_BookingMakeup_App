@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record CreateBookingRequest(
     UUID serviceId,
-    UUID artistId,
+    UUID ownerId,
     LocalDate bookingDate,
     LocalTime startTime,
     String promoCode

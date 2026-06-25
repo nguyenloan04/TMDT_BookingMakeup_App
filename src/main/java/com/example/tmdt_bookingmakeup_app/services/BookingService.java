@@ -46,8 +46,14 @@ public class BookingService {
         Service service = serviceRepository.findById(request.serviceId())
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + request.serviceId()));
 
-        Artist artist = artistRepository.findById(request.artistId())
-                .orElseThrow(() -> new RuntimeException("Artist not found with id: " + request.artistId()));
+//        Artist artist = artistRepository.findById(request.artistId())
+//                .orElseThrow(() -> new RuntimeException("Artist not found with id: " + request.artistId()));
+
+        //FIXME: Choose artist or random artist
+        Artist artist = artistRepository.findById(request.ownerId())
+                .orElseGet(() -> artistRepository.findAll().stream()
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Artist not found")));
 
         // 2. Calculate end time based on service duration (default to 60 minutes if null)
         int durationMinutes = service.getDuration() != null ? service.getDuration() : 60;
