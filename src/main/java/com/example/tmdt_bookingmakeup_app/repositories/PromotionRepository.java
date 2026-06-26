@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface PromotionRepository extends JpaRepository<Promotion, UUID> {
     Optional<Promotion> findByCode(String code);
     List<Promotion> findByOwnerUserId(UUID ownerUserId);
+    List<Promotion> findByOwnerIsNull();
     List<Promotion> findAllByExpiryDateAfter(LocalDateTime date);
     List<Promotion> findAllByOwnerUserIdAndExpiryDateAfter(UUID ownerUserId, LocalDateTime date);
+    List<Promotion> findByOwnerIsNullAndExpiryDateAfter(LocalDateTime date);
 }
