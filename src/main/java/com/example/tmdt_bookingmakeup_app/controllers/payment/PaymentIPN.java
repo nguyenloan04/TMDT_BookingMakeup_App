@@ -1,24 +1,54 @@
 package com.example.tmdt_bookingmakeup_app.controllers.payment;
 
-import com.example.tmdt_bookingmakeup_app.services.payment.PaymentIPNService;
-import lombok.RequiredArgsConstructor;
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
+import com.example.tmdt_bookingmakeup_app.config.SePayConfig;
+import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
+import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/")
-@RequiredArgsConstructor
+@RequestMapping("/payment")
 public class PaymentIPN {
-    private final PaymentIPNService paymentIPNService;
 
-    // Update status to BookingStatus.PAID_DEPOSIT
-    @GetMapping("/vnpay_ipn")
-    public ResponseEntity<String> createPaymentIPN(@RequestParam Map<String, String> allParams) {
-        return ResponseEntity.ok(paymentIPNService.generatePaymentIpn(allParams));
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private SePayConfig sePayConfig;
+
+    @PostMapping("/ipn")
+    public ResponseEntity<?> handleSePayIPN(
+            @RequestHeader(value = "X-Secret-Key", required = false) String secretKey,
+            @RequestBody Map<String, Object> payload) {
+
+        if (secretKey == null || !secretKey.equals(sePayConfig.secretKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+        }
+
+        String notificationType = (String) payload.get("notification_type");
+
+        if ("ORDER_PAID".equals(notificationType)) {
+            Map<String, Object> orderInfo = (Map<String, Object>) payload.get("order");
+            String invoiceStr = (String) orderInfo.get("order_invoice_number");
+
+            try {
+                UUID bookingId = UUID.fromString(invoiceStr);
+                Booking booking = bookingRepository.findById(bookingId).orElse(null);
+
+                if (booking != null && booking.getStatus() == BookingStatus.PENDING) {
+                    booking.setStatus(BookingStatus.PAID_DEPOSIT);
+                    bookingRepository.save(booking);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }
