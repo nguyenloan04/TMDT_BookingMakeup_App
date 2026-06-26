@@ -6,7 +6,7 @@ import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap; // <--- Import cái này
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 public class PaymentService {
     private final SePayConfig config;
     private final BookingRepository bookingRepository;
-    private final String CLIENT_URL = "http://localhost:3000"; //TODO: Update to deployed client url
+    private final String CLIENT_URL = "http://localhost:3000";
 
     @Autowired
     public PaymentService(SePayConfig config, BookingRepository bookingRepository) {
@@ -30,13 +30,14 @@ public class PaymentService {
             throw new RuntimeException("Bạn không có quyền thanh toán cho đơn này!");
         }
 
-        Map<String, String> fields = new HashMap<>();
+        Map<String, String> fields = new LinkedHashMap<>();
+
         fields.put("merchant", config.merchantId);
-        fields.put("currency", "VND");
-        fields.put("order_amount", String.valueOf(Math.round(booking.getDepositAmount())));
         fields.put("operation", "PURCHASE");
-        fields.put("order_description", "Thanh toan coc dat lich " + bookingId.toString().substring(0, 8));
+        fields.put("order_amount", String.valueOf(Math.round(booking.getDepositAmount())));
+        fields.put("currency", "VND");
         fields.put("order_invoice_number", bookingId.toString());
+        fields.put("order_description", "Thanh toan coc dat lich " + bookingId.toString().substring(0, 8));
         fields.put("customer_id", customerId.toString());
         fields.put("success_url", CLIENT_URL + "/payment/success");
         fields.put("error_url", CLIENT_URL + "/payment/error");
@@ -45,7 +46,7 @@ public class PaymentService {
         String signature = config.generateSignature(fields);
         fields.put("signature", signature);
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("actionUrl", config.payUrl);
         response.put("fields", fields);
         return response;
