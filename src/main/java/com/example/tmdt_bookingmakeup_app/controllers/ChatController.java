@@ -6,6 +6,7 @@ import com.example.tmdt_bookingmakeup_app.models.chat.ChatMessage;
 import com.example.tmdt_bookingmakeup_app.models.chat.ChatRoom;
 import com.example.tmdt_bookingmakeup_app.repositories.ChatRoomRepository;
 import com.example.tmdt_bookingmakeup_app.services.ChatMessageService;
+import com.example.tmdt_bookingmakeup_app.services.ChatPresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -20,7 +21,7 @@ import java.util.UUID;
 public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
-    private final ChatRoomRepository chatRoomRepository;
+    private final ChatPresenceService presenceService;
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatDto chatDto) {
@@ -47,5 +48,10 @@ public class ChatController {
                 "/queue/messages",
                 chatDto
         );
+    }
+
+    @MessageMapping("/chat.presence")
+    public void requestPresence() {
+        presenceService.broadcast();
     }
 }
