@@ -203,7 +203,7 @@ public class BookingService {
                     throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
                 }
                 if (currentStatus != BookingStatus.PENDING && currentStatus != BookingStatus.CONFIRMED) {
-                    throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
+                    throw new RuntimeException("Không thể hủy đơn đặt lịch lúc này. Trạng thái hiện tại: " + currentStatus);
                 }
             }
             // 2. If requester is the ServiceOwner
@@ -213,21 +213,22 @@ public class BookingService {
                     switch (newStatus) {
                         case CONFIRMED -> {
                             if (currentStatus != BookingStatus.PENDING) {
-                                throw new RuntimeException("Cannot confirm booking from status: " + currentStatus);
+                                throw new RuntimeException("Chỉ có thể xác nhận đơn từ trạng thái PENDING");
+                            }
+                        }
+                        case REJECTED -> {
+                            if (currentStatus != BookingStatus.PENDING) {
+                                throw new RuntimeException("Chỉ có thể từ chối đơn từ trạng thái PENDING");
                             }
                         }
                         case COMPLETED -> {
-                            if (currentStatus != BookingStatus.CONFIRMED) {
-                                throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
-                            }
-                        }
-                        case CANCELLED -> {
-                            if (currentStatus != BookingStatus.PENDING && currentStatus != BookingStatus.CONFIRMED) {
-                                throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
+                            // BẮT BUỘC KHÁCH PHẢI THANH TOÁN (PAID) THÌ MỚI ĐƯỢC BẤM HOÀN THÀNH
+                            if (currentStatus != BookingStatus.PAID) {
+                                throw new RuntimeException("Chưa thể Hoàn thành. Khách hàng chưa thanh toán tiền cọc (PAID)!");
                             }
                         }
                         default ->
-                                throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
+                                throw new RuntimeException("Chủ tiệm không được phép chuyển sang trạng thái: " + newStatus);
                     }
                 } else {
                     throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
@@ -243,7 +244,8 @@ public class BookingService {
 
         User customer = booking.getCustomer();
 
-        if (newStatus == BookingStatus.CANCELLED && booking.getUsedPoints() != null && booking.getUsedPoints() > 0) {
+        if ((newStatus == BookingStatus.CANCELLED || newStatus == BookingStatus.REJECTED)
+                && booking.getUsedPoints() != null && booking.getUsedPoints() > 0) {
             int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
             customer.setTotalPoints(currentPoints + booking.getUsedPoints());
             userRepository.save(customer);

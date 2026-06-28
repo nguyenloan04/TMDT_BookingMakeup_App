@@ -1,12 +1,13 @@
 package com.example.tmdt_bookingmakeup_app.services.payment;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.config.SePayConfig;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap; // <--- Import cái này
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +29,10 @@ public class PaymentService {
 
         if (!booking.getCustomer().getId().equals(customerId)) {
             throw new RuntimeException("Bạn không có quyền thanh toán cho đơn này!");
+        }
+
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new RuntimeException("Bạn chỉ có thể thanh toán khi Chủ tiệm đã Xác nhận (CONFIRMED) đơn đặt lịch!");
         }
 
         Map<String, String> fields = new LinkedHashMap<>();
