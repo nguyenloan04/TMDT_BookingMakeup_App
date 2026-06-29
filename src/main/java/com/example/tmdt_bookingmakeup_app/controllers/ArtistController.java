@@ -3,7 +3,6 @@ package com.example.tmdt_bookingmakeup_app.controllers;
 
 import com.example.tmdt_bookingmakeup_app.dto.request.artist.ArtistRequestDTO;
 import com.example.tmdt_bookingmakeup_app.dto.response.artist.ArtistResponseDTO;
-import com.example.tmdt_bookingmakeup_app.security.JwtConfig;
 import com.example.tmdt_bookingmakeup_app.services.ArtistService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +18,10 @@ import java.util.UUID;
 public class ArtistController {
 
     private final ArtistService artistService;
-    private final JwtConfig jwtConfig;
 
     @Autowired
-    public ArtistController(ArtistService artistService, JwtConfig jwtConfig) {
+    public ArtistController(ArtistService artistService) {
         this.artistService = artistService;
-        this.jwtConfig =  jwtConfig;
     }
 
     @GetMapping("/my-artists")
@@ -82,18 +79,9 @@ public class ArtistController {
 
     @GetMapping("/{id}/follow-status")
     public ResponseEntity<Boolean> checkFollowStatus(@PathVariable UUID id, HttpServletRequest request) {
-        String requesterId = null;
+        String userId = (String) request.getAttribute("userId");
 
-        // Tự dò xem khách có mang token không (Giống hệt phần Booking)
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtConfig.isValid(token)) {
-                requesterId = jwtConfig.extractUserId(token).toString();
-            }
-        }
-
-        boolean isFollowed = artistService.checkFollowStatus(id, requesterId);
+        boolean isFollowed = artistService.checkFollowStatus(id, userId);
         return ResponseEntity.ok(isFollowed);
     }
 }
