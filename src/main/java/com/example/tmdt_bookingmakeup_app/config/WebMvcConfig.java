@@ -23,7 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Exclude authentication and registration pathways, public searches
         registry.addInterceptor(jwtHttpInterceptor)
                 .addPathPatterns("/users/**", "/chats/**", "/messages/**", "/promotions/**", "/bookings/**", "/artists/**", "/services/**", "/favourites/**", "/reviews/**", "/payment/**")
-                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id:[a-fA-F0-9-]+}", "/promotions/{id:[a-fA-F0-9-]+}", "/promotions/validate", "/bookings/artist/**", "/profile/providers/**", "/reviews/service/{serviceId:[a-fA-F0-9-]+}", "/reviews/artist/{artistId:[a-fA-F0-9-]+}", "/ws/**", "/chat/rooms/**");
+                .excludePathPatterns("/auth/**", "/verification/**", "/search/**", "/users/{id:[a-fA-F0-9-]+}", "/promotions", "/promotions/{id:[a-fA-F0-9-]+}", "/promotions/validate", "/services", "/services/{id:[a-fA-F0-9-]+}", "/bookings/artist/**", "/profile/providers/**", "/reviews/service/{serviceId:[a-fA-F0-9-]+}", "/reviews/artist/{artistId:[a-fA-F0-9-]+}", "/ws/**", "/chat/rooms/**");
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {

@@ -1,6 +1,7 @@
 package com.example.tmdt_bookingmakeup_app.services;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.tmdt_bookingmakeup_app.config.CloudinaryConfig.CloudinaryProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,5 +45,10 @@ public class CloudinaryService {
         catch (Exception e) {
             return null;
         }
+    }
+
+    public String upload(byte[] fileBytes) throws Exception {
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(fileBytes, ObjectUtils.emptyMap());
+        return (String) uploadResult.get("secure_url");
     }
 }

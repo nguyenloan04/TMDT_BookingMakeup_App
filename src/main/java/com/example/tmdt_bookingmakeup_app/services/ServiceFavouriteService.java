@@ -66,40 +66,4 @@ public class ServiceFavouriteService {
     public boolean isFavourite(UUID customerId, UUID serviceId) {
         return favouriteRepository.existsByCustomerIdAndServiceId(customerId, serviceId);
     }
-
-    public List<com.example.tmdt_bookingmakeup_app.dto.response.favourite.FavouriteAdminDto> getAllFavouritesForAdmin() {
-        return favouriteRepository.findAll().stream()
-                .map(fav -> {
-                    String customerName = fav.getCustomer().getDisplayName() != null 
-                            ? fav.getCustomer().getDisplayName() 
-                            : fav.getCustomer().getUsername();
-                    
-                    String artistName = "N/A";
-                    if (fav.getService().getOwner() != null && fav.getService().getOwner().getUser() != null) {
-                        artistName = fav.getService().getOwner().getUser().getDisplayName() != null 
-                                ? fav.getService().getOwner().getUser().getDisplayName() 
-                                : fav.getService().getOwner().getUser().getUsername();
-                    }
-                    
-                    return new com.example.tmdt_bookingmakeup_app.dto.response.favourite.FavouriteAdminDto(
-                            fav.getId(),
-                            fav.getCustomer().getId(),
-                            customerName,
-                            fav.getCustomer().getEmail(),
-                            fav.getService().getId(),
-                            fav.getService().getName(),
-                            fav.getService().getPrice(),
-                            artistName
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void deleteFavouriteById(Long id) {
-        if (!favouriteRepository.existsById(id)) {
-            throw new RuntimeException("Favorite not found with id: " + id);
-        }
-        favouriteRepository.deleteById(id);
-    }
 }

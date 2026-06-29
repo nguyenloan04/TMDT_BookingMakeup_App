@@ -42,8 +42,8 @@ public class JwtHttpInterceptor implements HandlerInterceptor {
         // the controller still receives the user identity and can apply admin/
         // service-owner rules. Without a token it returns active promotions.
         if (HttpMethod.GET.matches(request.getMethod())
-                && (request.getRequestURI().startsWith("/services")
-                    || "/promotions".equals(request.getRequestURI()))) {
+                && ("/promotions".equals(request.getRequestURI())
+                    || "/services".equals(request.getRequestURI()))) {
             return true;
         }
 

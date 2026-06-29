@@ -53,7 +53,6 @@ public class MakeupOfferingService {
         service.setActive(true);
         service.setRating(0.0);
         service.setOwner(owner);
-        service.setImageUrl(request.imageUrl());
         
         Service saved = serviceRepository.save(service);
         return mapToDto(saved);
