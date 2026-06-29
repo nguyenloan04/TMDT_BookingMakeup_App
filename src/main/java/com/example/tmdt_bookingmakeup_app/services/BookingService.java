@@ -6,6 +6,7 @@ import com.example.tmdt_bookingmakeup_app.dto.request.booking.CreateBookingReque
 import com.example.tmdt_bookingmakeup_app.dto.request.booking.UpdateBookingStatusRequest;
 import com.example.tmdt_bookingmakeup_app.dto.request.promotion.ValidatePromotionRequest;
 import com.example.tmdt_bookingmakeup_app.dto.response.booking.BookingDto;
+import com.example.tmdt_bookingmakeup_app.dto.response.home.FeaturedArtistDto;
 import com.example.tmdt_bookingmakeup_app.dto.response.promotion.PromotionValidationResponse;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import com.example.tmdt_bookingmakeup_app.models.promotion.Promotion;
