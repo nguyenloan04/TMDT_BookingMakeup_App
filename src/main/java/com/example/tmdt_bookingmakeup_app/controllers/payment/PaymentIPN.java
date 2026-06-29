@@ -46,7 +46,7 @@ public class PaymentIPN {
                 Booking booking = bookingRepository.findById(bookingId).orElse(null);
 
                 if (booking != null && booking.getStatus() == BookingStatus.PENDING) {
-                    booking.setStatus(BookingStatus.PAID_DEPOSIT);
+                    booking.setStatus(BookingStatus.PAID);
                     bookingRepository.save(booking);
                     notificationService.notifyPaymentSuccess(bookingId);
                 }

@@ -53,7 +53,7 @@ public class PaymentIPNService {
                     if (vnpAmount == dbDepositAmount) {
                         if (booking.getStatus() == BookingStatus.PENDING) {
                             if ("00".equals(allParams.get("vnp_ResponseCode"))) {
-                                booking.setStatus(BookingStatus.PAID_DEPOSIT);
+                                booking.setStatus(BookingStatus.PAID);
                                 bookingRepository.save(booking);
                                 notificationService.notifyPaymentSuccess(bookingId);
                                 rspCode = "00";
