@@ -4,6 +4,7 @@ import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.config.SePayConfig;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
+import com.example.tmdt_bookingmakeup_app.services.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,9 @@ public class PaymentIPN {
 
     @Autowired
     private SePayConfig sePayConfig;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @PostMapping("/ipn")
     public ResponseEntity<?> handleSePayIPN(
@@ -44,6 +48,7 @@ public class PaymentIPN {
                 if (booking != null && booking.getStatus() == BookingStatus.PENDING) {
                     booking.setStatus(BookingStatus.PAID_DEPOSIT);
                     bookingRepository.save(booking);
+                    notificationService.notifyPaymentSuccess(bookingId);
                 }
             } catch (Exception ignored) {
             }
