@@ -41,4 +41,7 @@ public class Service {
 
     @Column(name = "rating")
     private Double rating = 0.0;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

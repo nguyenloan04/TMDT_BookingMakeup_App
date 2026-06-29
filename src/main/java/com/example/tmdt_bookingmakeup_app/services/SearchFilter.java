@@ -122,10 +122,12 @@ public class SearchFilter {
                 new String[]{service.getCategory() != null ? service.getCategory() : "Khác", "pink"}
         );
 
-        // Image: dùng portfolioImages của artist nếu có
-        String imageUrl = (artist != null && artist.getPortfolioImages() != null && !artist.getPortfolioImages().isBlank())
-                ? artist.getPortfolioImages()
-                : "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&h=300&fit=crop";
+        // Image: dùng image_url của service nếu có, ngược lại dùng portfolioImages của artist
+        String imageUrl = (service.getImageUrl() != null && !service.getImageUrl().isBlank())
+                ? service.getImageUrl()
+                : ((artist != null && artist.getPortfolioImages() != null && !artist.getPortfolioImages().isBlank())
+                        ? artist.getPortfolioImages()
+                        : "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&h=300&fit=crop");
 
         // Location: lấy từ address của user
         String location = owner.getUser().getAddress() != null

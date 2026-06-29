@@ -14,4 +14,5 @@ public class ServiceDto {
     private Integer duration;
     private boolean isActive;
     private Double rating;
+    private String imageUrl;
 }

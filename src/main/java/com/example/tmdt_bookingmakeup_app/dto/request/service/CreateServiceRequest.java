@@ -5,5 +5,6 @@ public record CreateServiceRequest(
     String description,
     Double price,
     String category,
-    Integer duration
+    Integer duration,
+    String imageUrl
 ) {}

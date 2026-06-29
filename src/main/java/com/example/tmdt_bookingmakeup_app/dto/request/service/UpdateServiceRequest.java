@@ -6,5 +6,6 @@ public record UpdateServiceRequest(
     Double price,
     String category,
     Integer duration,
-    Boolean isActive
+    Boolean isActive,
+    String imageUrl
 ) {}

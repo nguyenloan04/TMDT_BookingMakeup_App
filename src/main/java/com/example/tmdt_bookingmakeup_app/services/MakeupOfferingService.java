@@ -49,9 +49,11 @@ public class MakeupOfferingService {
         service.setPrice(request.price());
         service.setCategory(request.category());
         service.setDuration(request.duration());
+        service.setImageUrl(request.imageUrl());
         service.setActive(true);
         service.setRating(0.0);
         service.setOwner(owner);
+        service.setImageUrl(request.imageUrl());
         
         Service saved = serviceRepository.save(service);
         return mapToDto(saved);
@@ -72,6 +74,7 @@ public class MakeupOfferingService {
         if (request.category() != null) service.setCategory(request.category());
         if (request.duration() != null) service.setDuration(request.duration());
         if (request.isActive() != null) service.setActive(request.isActive());
+        if (request.imageUrl() != null) service.setImageUrl(request.imageUrl());
         
         Service updated = serviceRepository.save(service);
         return mapToDto(updated);
@@ -107,6 +110,7 @@ public class MakeupOfferingService {
         dto.setDuration(service.getDuration());
         dto.setActive(service.isActive());
         dto.setRating(service.getRating());
+        dto.setImageUrl(service.getImageUrl());
         return dto;
     }
 }

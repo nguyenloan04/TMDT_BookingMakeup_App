@@ -60,7 +60,7 @@ public class ServiceProviderController {
                         .name(s.getName())
                         .price(s.getPrice())
                         .duration(s.getDuration() != null ? s.getDuration() : 60)
-                        .imageUrl(null)
+                        .imageUrl(s.getImageUrl())
                         .build()
         ).collect(Collectors.toList());
 
@@ -98,7 +98,7 @@ public class ServiceProviderController {
                         .name(s.getName())
                         .price(s.getPrice())
                         .duration(s.getDuration() != null ? s.getDuration() : 60)
-                        .imageUrl(null)
+                        .imageUrl(s.getImageUrl())
                         .build()
         ).collect(Collectors.toList());
 
@@ -114,7 +114,7 @@ public class ServiceProviderController {
                 .ownerName(owner != null ? owner.getDisplayName() : "Studio")
                 .ownerAvatar(owner != null ? owner.getAvatarUrl() : null)
                 .relatedServices(relatedDtos)
-                .mainThumbnailUrl(artists != null ? artists.getPortfolioImages() : null)
+                .mainThumbnailUrl(service.getImageUrl() != null && !service.getImageUrl().isBlank() ? service.getImageUrl() : (artists != null ? artists.getPortfolioImages() : null))
                 .rating(artists != null ? artists.getAverageRating() : 0)
                 .reviewCount(artists != null ? artists.getReviewCount() : 0)
                 .address(owner != null ? owner.getAddress() : "")

@@ -16,10 +16,12 @@ import java.util.UUID;
 public class ServiceFavouriteController {
 
     private final ServiceFavouriteService favouriteService;
+    private final com.example.tmdt_bookingmakeup_app.services.UserService userService;
 
     @Autowired
-    public ServiceFavouriteController(ServiceFavouriteService favouriteService) {
+    public ServiceFavouriteController(ServiceFavouriteService favouriteService, com.example.tmdt_bookingmakeup_app.services.UserService userService) {
         this.favouriteService = favouriteService;
+        this.userService = userService;
     }
 
     @PostMapping("/{serviceId}")
@@ -82,4 +84,42 @@ public class ServiceFavouriteController {
         }
     }
 
+    // 5. Admin API: Get All Favourites
+    @GetMapping("/admin")
+    public ResponseEntity<?> getAllFavouritesAdmin(HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
+        }
+        try {
+            UUID requesterId = UUID.fromString(rawUserId);
+            com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto requester = userService.getUserProfile(requesterId);
+            if (requester.getRole() != com.example.tmdt_bookingmakeup_app.common.enums.UserRole.ADMIN) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Only Admins can perform this action");
+            }
+            return ResponseEntity.ok(favouriteService.getAllFavouritesForAdmin());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 6. Admin API: Delete Favorite association by ID
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<?> deleteFavouriteAdmin(@PathVariable Long id, HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
+        }
+        try {
+            UUID requesterId = UUID.fromString(rawUserId);
+            com.example.tmdt_bookingmakeup_app.dto.response.user.UserDto requester = userService.getUserProfile(requesterId);
+            if (requester.getRole() != com.example.tmdt_bookingmakeup_app.common.enums.UserRole.ADMIN) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Only Admins can perform this action");
+            }
+            favouriteService.deleteFavouriteById(id);
+            return ResponseEntity.ok("Favorite record deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }
