@@ -1,12 +1,16 @@
 package com.example.tmdt_bookingmakeup_app.services;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.UserRole;
 import com.example.tmdt_bookingmakeup_app.dto.response.home.FeaturedArtistDto;
+import com.example.tmdt_bookingmakeup_app.dto.response.home.FeaturedProviderDto;
 import com.example.tmdt_bookingmakeup_app.dto.response.home.HomePageResponse;
 import com.example.tmdt_bookingmakeup_app.dto.response.home.HomePromotionDto;
 import com.example.tmdt_bookingmakeup_app.models.promotion.Promotion;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
+import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
 import com.example.tmdt_bookingmakeup_app.repositories.ArtistRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.PromotionRepository;
+import com.example.tmdt_bookingmakeup_app.repositories.ServiceOwnerRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -25,22 +29,34 @@ public class HomePageService {
     private final ArtistRepository artistRepository;
     private final PromotionRepository promotionRepository;
     private final ServiceRepository serviceRepository;
+    private final ServiceOwnerRepository serviceOwnerRepository;
 
     public HomePageResponse getHomePageData() {
+        List<FeaturedProviderDto> featuredProviders = getTopProviders();
         List<FeaturedArtistDto> featuredArtists = getTopArtists();
         List<HomePromotionDto> promotions = getActivePromotions();
 
-        return new HomePageResponse(featuredArtists, promotions);
+        return new HomePageResponse(featuredProviders, featuredArtists, promotions);
+    }
+
+    private List<FeaturedProviderDto> getTopProviders() {
+        List<ServiceOwner> topProviders = artistRepository.findByOwner_User_RoleNot(UserRole.ADMIN,
+                PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "averageRating"))
+        ).getContent().stream().map(Artist::getOwner).toList();
+
+        return topProviders.stream()
+                .map(this::mapToFeaturedProviderDto)
+                .toList();
     }
 
     private List<FeaturedArtistDto> getTopArtists() {
-        List<Artist> topArtists = artistRepository.findAll(
+        List<Artist> topArtists = artistRepository.findByOwner_User_RoleNot(UserRole.ADMIN,
                 PageRequest.of(0, 8, Sort.by(Sort.Direction.DESC, "averageRating"))
         ).getContent();
 
         return topArtists.stream()
                 .map(this::mapToFeaturedArtistDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<HomePromotionDto> getActivePromotions() {
@@ -48,6 +64,23 @@ public class HomePageService {
         return activePromos.stream()
                 .map(this::mapToHomePromotionDto)
                 .collect(Collectors.toList());
+    }
+
+    public FeaturedProviderDto mapToFeaturedProviderDto(ServiceOwner serviceOwner) {
+        Double fetchedPrice = serviceRepository.findMinPriceByOwnerId(serviceOwner.getUserId());
+        double minPrice = fetchedPrice != null ? fetchedPrice : 0.0;
+
+        String avatarUrl = serviceOwner.getUser().getAvatarUrl();
+
+        String displayName = serviceOwner.getUser().getDisplayName() != null
+                ? serviceOwner.getUser().getDisplayName()
+                : serviceOwner.getUser().getUsername();
+        return new FeaturedProviderDto(
+                serviceOwner.getUserId().toString(),
+                displayName,
+                minPrice,
+                avatarUrl
+        );
     }
 
     public FeaturedArtistDto mapToFeaturedArtistDto(Artist a) {

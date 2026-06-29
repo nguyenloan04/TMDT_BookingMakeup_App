@@ -1,6 +1,9 @@
 package com.example.tmdt_bookingmakeup_app.repositories;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.UserRole;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +15,8 @@ import java.util.UUID;
 
 @Repository
 public interface ArtistRepository extends JpaRepository<Artist, UUID> {
+
+    Page<Artist> findByOwner_User_RoleNot(UserRole role, Pageable pageable);
 
     List<Artist> findByOwnerUserId(UUID ownerId);
 
