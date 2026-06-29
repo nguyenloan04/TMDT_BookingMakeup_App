@@ -2,7 +2,7 @@ package com.example.tmdt_bookingmakeup_app.controllers;
 
 import com.example.tmdt_bookingmakeup_app.dto.response.artist.ArtistServiceDTO;
 import com.example.tmdt_bookingmakeup_app.dto.response.home.FeaturedArtistDto;
-import com.example.tmdt_bookingmakeup_app.dto.response.artist.ArtistProfileResponse;
+import com.example.tmdt_bookingmakeup_app.dto.response.artist.ProviderProfileResponse;
 import com.example.tmdt_bookingmakeup_app.dto.response.artist.ArtistServiceDetailResponse;
 import com.example.tmdt_bookingmakeup_app.models.services.Service;
 import com.example.tmdt_bookingmakeup_app.models.user.Artist;
@@ -25,35 +25,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServiceProviderController {
 
-    private final ServiceOwnerRepository ownerRepository;
     private final ArtistRepository artistRepository;
     private final ServiceRepository serviceRepository;
     private final HomePageService homePageService;
+    private final ServiceOwnerRepository serviceOwnerRepository;
 
-    @GetMapping("/{artistId}")
-    public ResponseEntity<ArtistProfileResponse> getProviderProfile(@PathVariable UUID artistId) {
-        // 1. Tìm Artist dựa trên ID từ URL truyền xuống
-        Artist currentArtist = artistRepository.findById(artistId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyên viên"));
-
-        // 2. Lấy ra Owner (Studio/Agency) quản lý Artist này
-        ServiceOwner owner = currentArtist.getOwner();
-        if (owner == null) {
+    @GetMapping("/{providerId}")
+    public ResponseEntity<ProviderProfileResponse> getProviderProfile(@PathVariable UUID providerId) {
+        ServiceOwner currentProvider = serviceOwnerRepository.findById(providerId).orElse(null);
+        if (currentProvider == null) {
             return ResponseEntity.status(404).body(null);
         }
 
-        UUID ownerId = owner.getUserId();
+        UUID ownerId = currentProvider.getUserId();
 
-        // 3. Lấy tất cả Artist và Service thuộc về Owner này
         List<Artist> artists = artistRepository.findByOwnerUserId(ownerId);
         List<Service> services = serviceRepository.findByOwnerUserIdAndIsActiveTrue(ownerId);
 
-        // Map DTO Artists
         List<FeaturedArtistDto> artistDtos = artists.stream()
                 .map(homePageService::mapToFeaturedArtistDto)
                 .toList();
 
-        // Map DTO Services
         List<ArtistServiceDTO> serviceDtos = services.stream().map(s ->
                 ArtistServiceDTO.builder()
                         .id(s.getId().toString())
@@ -64,17 +56,18 @@ public class ServiceProviderController {
                         .build()
         ).collect(Collectors.toList());
 
-        // Build Response
-        ArtistProfileResponse response = ArtistProfileResponse.builder()
+        double rating = artistDtos.stream().mapToDouble(FeaturedArtistDto::rating).average().orElse(0.0);
+        int reviewCount = artistDtos.stream().mapToInt(FeaturedArtistDto::reviewsCount).sum();
+
+        ProviderProfileResponse response = ProviderProfileResponse.builder()
                 .ownerId(ownerId.toString())
-                .displayName(owner.getUser() != null ? owner.getUser().getDisplayName() : "Glow Studio")
-                .avatarUrl(owner.getUser() != null ? owner.getUser().getAvatarUrl() : null)
-                .address(owner.getUser() != null ? owner.getUser().getAddress() : "TP. Hồ Chí Minh")
-                .experienceYears(owner.getExperienceYears() != null ? owner.getExperienceYears() : 5)
-                .bio(owner.getBio())
-                .averageRating(0.0) // TODO: Fix this
-                .totalReviews(0) // TODO: Fix this
-                .totalCustomers(0) // TODO: Fix this
+                .displayName(currentProvider.getUser() != null ? currentProvider.getUser().getDisplayName() : "")
+                .avatarUrl(currentProvider.getUser() != null ? currentProvider.getUser().getAvatarUrl() : null)
+                .address(currentProvider.getUser() != null ? currentProvider.getUser().getAddress() : "TP. Hồ Chí Minh")
+                .experienceYears(currentProvider.getExperienceYears() != null ? currentProvider.getExperienceYears() : 5)
+                .bio(currentProvider.getBio())
+                .averageRating(rating)
+                .totalReviews(reviewCount)
                 .artists(artistDtos)
                 .services(serviceDtos)
                 .build();

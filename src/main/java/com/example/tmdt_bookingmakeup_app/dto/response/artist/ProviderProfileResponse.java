@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class ArtistProfileResponse {
+public class ProviderProfileResponse {
     private String ownerId;
     private String displayName;
     private String avatarUrl;
@@ -16,7 +16,6 @@ public class ArtistProfileResponse {
     private String bio;
     private Double averageRating;
     private Integer totalReviews;
-    private Integer totalCustomers;
     private List<FeaturedArtistDto> artists;
     private List<ArtistServiceDTO> services;
 }
