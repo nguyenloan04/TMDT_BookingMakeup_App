@@ -49,7 +49,7 @@ dependencies {
     implementation(libs.springboot.starter)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.websocket)
-//    implementation(libs.spring.boot.starter.data.redis)
+    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.spring.boot.starter.web)
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

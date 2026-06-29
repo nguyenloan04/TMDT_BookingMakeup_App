@@ -5,6 +5,7 @@ import com.example.tmdt_bookingmakeup_app.common.enums.PaymentStatus;
 import com.example.tmdt_bookingmakeup_app.config.VNPayConfig;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
+import com.example.tmdt_bookingmakeup_app.services.NotificationService;
 import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ import java.util.UUID;
 @Service
 public class PaymentIPNService {
     private final BookingRepository bookingRepository;
+    private final NotificationService notificationService;
 
     @Autowired
-    public PaymentIPNService(BookingRepository bookingRepository) {
+    public PaymentIPNService(BookingRepository bookingRepository, NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
+        this.notificationService = notificationService;
     }
 
     public String generatePaymentIpn(Map<String, String> allParams) {
@@ -52,6 +55,7 @@ public class PaymentIPNService {
                             if ("00".equals(allParams.get("vnp_ResponseCode"))) {
                                 booking.setStatus(BookingStatus.PAID);
                                 bookingRepository.save(booking);
+                                notificationService.notifyPaymentSuccess(bookingId);
                                 rspCode = "00";
                                 message = "Confirm Success";
                             } else {

@@ -38,6 +38,7 @@ public class BookingService {
     private final ServiceOwnerRepository serviceOwnerRepository;
     private final PromotionService promotionService;
     private final PromotionRepository promotionRepository;
+    private final NotificationService notificationService;
 
     public BookingDto createBooking(CreateBookingRequest request, UUID customerId) {
         // 1. Fetch user, service and artist
@@ -110,6 +111,7 @@ public class BookingService {
         booking.setUsedPoints(pointsToDeduct);
 
         Booking saved = bookingRepository.save(booking);
+        notificationService.notifyBookingStatusChange(saved, BookingStatus.PENDING, customerId);
         return mapToDto(saved);
     }
 
@@ -260,6 +262,7 @@ public class BookingService {
         }
 
         Booking saved = bookingRepository.save(booking);
+        notificationService.notifyBookingStatusChange(saved, newStatus, requesterId);
         return mapToDto(saved);
     }
 
