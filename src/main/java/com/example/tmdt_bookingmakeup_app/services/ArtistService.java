@@ -67,24 +67,38 @@ public class ArtistService {
         artistRepository.deleteById(artistId); //
     }
 
-    public String toggleFollowArtist(UUID customerId, UUID artistId) {
-        Optional<Follow> existingFollow = followRepository.findByCustomerIdAndArtistId(customerId, artistId); //
+    @Transactional
+    public void toggleFollow(UUID artistId, String customerIdStr) {
+        UUID customerId = UUID.fromString(customerIdStr);
 
-        if (existingFollow.isPresent()) { //
-            followRepository.delete(existingFollow.get()); //
-            artistRepository.decrementFollowCount(artistId); //
-            return "unfollowed artist"; //
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Artist"));
+
+        Optional<Follow> existingFollow = followRepository.findByCustomerIdAndArtistId(customerId, artistId);
+
+        if (existingFollow.isPresent()) {
+            // NẾU ĐÃ FOLLOW -> HỦY FOLLOW
+            followRepository.delete(existingFollow.get());
+            artist.setFollowCount(Math.max(0, artist.getFollowCount() - 1)); // Giảm count
         } else {
-            User customer = userRepository.findById(customerId).orElseThrow(); //
-            Artist artist = artistRepository.findById(artistId).orElseThrow(); //
+            // NẾU CHƯA FOLLOW -> THÊM FOLLOW
+            User customer = userRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy User"));
 
-            Follow newFollow = new Follow(); //
-            newFollow.setCustomer(customer); //
-            newFollow.setArtist(artist); //
-            followRepository.save(newFollow); //
+            Follow newFollow = new Follow();
+            newFollow.setCustomer(customer);
+            newFollow.setArtist(artist);
+            followRepository.save(newFollow);
 
-            artistRepository.incrementFollowCount(artistId); //
-            return "followed artist"; //
+            artist.setFollowCount(artist.getFollowCount() + 1); // Tăng count
         }
+
+        artistRepository.save(artist); // Lưu lại số lượng follow mới
+    }
+
+    public boolean checkFollowStatus(UUID artistId, String customerIdStr) {
+        if (customerIdStr == null) return false;
+        UUID customerId = UUID.fromString(customerIdStr);
+        return followRepository.existsByCustomerIdAndArtistId(customerId, artistId);
     }
 }

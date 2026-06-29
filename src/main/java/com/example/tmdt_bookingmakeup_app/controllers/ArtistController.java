@@ -61,4 +61,27 @@ public class ArtistController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    @PostMapping("/{id}/follow")
+    public ResponseEntity<?> toggleFollow(@PathVariable UUID id, HttpServletRequest request) {
+        // Interceptor đã gài userId vào request nếu có token hợp lệ
+        String userId = (String) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập để thực hiện");
+        }
+
+        try {
+            artistService.toggleFollow(id, userId);
+            return ResponseEntity.ok().body("Thao tác thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/follow-status")
+    public ResponseEntity<Boolean> checkFollowStatus(@PathVariable UUID id, HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userId");
+
+        boolean isFollowed = artistService.checkFollowStatus(id, userId);
+        return ResponseEntity.ok(isFollowed);
+    }
 }
