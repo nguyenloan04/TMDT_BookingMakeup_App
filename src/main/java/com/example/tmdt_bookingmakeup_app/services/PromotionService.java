@@ -155,6 +155,37 @@ public class PromotionService {
         return new PromotionValidationResponse(true, discount, finalAmount, null, pointsNeeded);
     }
 
+    public List<PromotionDto> getPlatformPromotions(UUID requesterId, UserRole requesterRole) {
+//        if (requesterRole == UserRole.ADMIN) {
+//            return promotionRepository.findByOwnerIsNull().stream()
+//                    .map(this::mapToDto)
+//                    .collect(Collectors.toList());
+//        }
+
+        return promotionRepository.findByOwnerIsNullAndExpiryDateAfter(LocalDateTime.now()).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<PromotionDto> getStudioPromotions(UUID requesterId, UserRole requesterRole, UUID ownerId) {
+//        if (ownerId == null) {
+//            throw new IllegalArgumentException("Owner ID cannot be null when fetching studio promotions");
+//        }
+
+//        boolean isOwnerRequesting = requesterId != null && requesterId.equals(ownerId);
+//
+//        if (isOwnerRequesting) {
+//            return promotionRepository.findByOwnerUserId(ownerId).stream()
+//                    .map(this::mapToDto)
+//                    .collect(Collectors.toList());
+//        }
+
+        return promotionRepository.findAllByOwnerUserIdAndExpiryDateAfter(ownerId, LocalDateTime.now()).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+
     private void assertCanManagePromotion(Promotion promotion, UUID requesterId, UserRole requesterRole) {
         if (requesterRole == UserRole.ADMIN) {
             if (promotion.getOwner() != null) {
