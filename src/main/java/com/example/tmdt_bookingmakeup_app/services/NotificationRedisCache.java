@@ -2,12 +2,17 @@ package com.example.tmdt_bookingmakeup_app.services;
 
 import com.example.tmdt_bookingmakeup_app.dto.response.notification.NotificationDto;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +26,9 @@ public class NotificationRedisCache {
     private static final String UNREAD_KEY_PREFIX = "notifications:unread:";
 
     private final StringRedisTemplate redisTemplate;
-    private final Gson gson = new Gson();
+    private final Gson gson;
+
+    private static final DateTimeFormatter LDT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     @Value("${app.notifications.redis-ttl-hours:24}")
     private long ttlHours;
@@ -32,6 +39,14 @@ public class NotificationRedisCache {
     @Autowired
     public NotificationRedisCache(@Autowired(required = false) StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class,
+                        (JsonSerializer<LocalDateTime>) (src, typeOfSrc, ctx) ->
+                                ctx.serialize(src.format(LDT_FORMATTER)))
+                .registerTypeAdapter(LocalDateTime.class,
+                        (JsonDeserializer<LocalDateTime>) (json, typeOfT, ctx) ->
+                                LocalDateTime.parse(json.getAsString(), LDT_FORMATTER))
+                .create();
     }
 
     private boolean isAvailable() {
