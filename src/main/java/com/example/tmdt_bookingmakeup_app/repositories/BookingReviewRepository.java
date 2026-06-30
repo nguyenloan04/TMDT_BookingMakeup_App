@@ -4,6 +4,7 @@ import com.example.tmdt_bookingmakeup_app.models.booking.BookingReview;
 import com.example.tmdt_bookingmakeup_app.common.enums.ReviewStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,5 +24,6 @@ public interface BookingReviewRepository extends JpaRepository<BookingReview, UU
             "WHERE r.artist.id = :artistId AND r.status = :status")
     Double calculateAverageArtistRating(UUID artistId, ReviewStatus status);
 
-    List<BookingReview> findAllByServiceOwnerId(UUID ownerId);
+    @Query("SELECT r FROM BookingReview r WHERE r.booking.service.owner.userId = :ownerId")
+    List<BookingReview> findAllByServiceOwnerId(@Param("ownerId") UUID ownerId);;
 }
