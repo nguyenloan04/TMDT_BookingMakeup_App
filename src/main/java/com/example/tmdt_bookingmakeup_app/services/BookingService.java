@@ -114,7 +114,7 @@ public class BookingService {
         if (pointsToDeduct > 0) {
             int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
             customer.setTotalPoints(currentPoints - pointsToDeduct);
-            userRepository.save(customer);
+            userRepository.saveAndFlush(customer);
         }
 
         Booking saved = bookingRepository.save(booking);
