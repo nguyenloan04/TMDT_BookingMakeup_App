@@ -22,4 +22,6 @@ public interface BookingReviewRepository extends JpaRepository<BookingReview, UU
     @Query("SELECT COALESCE(AVG(r.artistRating), 0.0) FROM BookingReview r " +
             "WHERE r.artist.id = :artistId AND r.status = :status")
     Double calculateAverageArtistRating(UUID artistId, ReviewStatus status);
+
+    List<BookingReview> findAllByServiceOwnerId(UUID ownerId);
 }
