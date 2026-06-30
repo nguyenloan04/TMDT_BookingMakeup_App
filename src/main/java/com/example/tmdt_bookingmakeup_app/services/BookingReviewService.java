@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,15 @@ public class BookingReviewService {
         this.reviewRepository = reviewRepository;
         this.bookingRepository = bookingRepository;
         this.artistRepository = artistRepository;
+    }
+
+    public Optional<UUID> getReviewableBookingId(UUID customerId, UUID artistId) {
+        List<Booking> completedBookings = bookingRepository
+                .findByCustomerIdAndArtistIdAndStatusOrderByBookingDateDesc(customerId, artistId, BookingStatus.COMPLETED);
+        return completedBookings.stream()
+                .filter(b -> !reviewRepository.existsByBookingId(b.getId()))
+                .map(Booking::getId)
+                .findFirst();
     }
 
     public List<ReviewDto> getAllReviews() {
