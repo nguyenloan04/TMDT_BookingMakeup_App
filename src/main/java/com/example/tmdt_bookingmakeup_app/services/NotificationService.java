@@ -63,7 +63,7 @@ public class NotificationService {
                     );
                 }
             }
-            case PAID_DEPOSIT -> {
+            case PAID -> {
                 createNotification(
                         customerId, booking, NotificationType.BOOKING_PAID,
                         "Thanh toán thành công",
@@ -87,7 +87,7 @@ public class NotificationService {
     public void notifyPaymentSuccess(UUID bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found: " + bookingId));
-        notifyBookingStatusChange(booking, BookingStatus.PAID_DEPOSIT, null);
+        notifyBookingStatusChange(booking, BookingStatus.PAID, null);
     }
 
     private void createNotification(UUID recipientId, Booking booking, NotificationType type,

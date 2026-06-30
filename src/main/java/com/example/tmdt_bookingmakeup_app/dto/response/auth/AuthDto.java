@@ -26,4 +26,5 @@ public class AuthDto {
     private boolean isVerified;
     private UserRole role;
     private String jwtToken;
+    private int totalPoint;
 }

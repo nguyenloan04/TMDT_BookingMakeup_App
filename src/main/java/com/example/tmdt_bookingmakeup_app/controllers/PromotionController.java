@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +30,43 @@ public class PromotionController {
     public PromotionController(PromotionService promotionService, UserService userService) {
         this.promotionService = promotionService;
         this.userService = userService;
+    }
+
+    @GetMapping("/platform")
+    public ResponseEntity<List<PromotionDto>> getPlatformPromotions(HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        try {
+            if (rawUserId == null) {
+                List<PromotionDto> activePromos = promotionService.getPlatformPromotions(null, UserRole.USER);
+                return ResponseEntity.ok(activePromos);
+            } else {
+                UUID requesterId = UUID.fromString(rawUserId);
+                UserDto requester = userService.getUserProfile(requesterId);
+                List<PromotionDto> promos = promotionService.getPlatformPromotions(requesterId, requester.getRole());
+                return ResponseEntity.ok(promos);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
+        }
+    }
+
+    // 2. Lấy mã giảm giá của một Studio cụ thể (Sẽ xử lý chi tiết sau)
+    @GetMapping("/studio/{ownerId}")
+    public ResponseEntity<?> getStudioPromotions(@PathVariable UUID ownerId, HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        try {
+            if (rawUserId == null) {
+                List<PromotionDto> activePromos = promotionService.getStudioPromotions(null, UserRole.USER, ownerId);
+                return ResponseEntity.ok(activePromos);
+            } else {
+                UUID requesterId = UUID.fromString(rawUserId);
+                UserDto requester = userService.getUserProfile(requesterId);
+                List<PromotionDto> promos = promotionService.getStudioPromotions(requesterId, requester.getRole(), ownerId);
+                return ResponseEntity.ok(promos);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     // 1. Get List of Promotions (Smart filter by role and owner)

@@ -40,6 +40,7 @@ public class BookingService {
     private final PromotionRepository promotionRepository;
     private final NotificationService notificationService;
 
+    @Transactional
     public BookingDto createBooking(CreateBookingRequest request, UUID customerId) {
         // 1. Fetch user, service and artist
         User customer = userRepository.findById(customerId)
@@ -109,6 +110,12 @@ public class BookingService {
         booking.setStatus(BookingStatus.valueOf(BookingStatus.PENDING.name()));
         booking.setPromotion(appliedPromo);
         booking.setUsedPoints(pointsToDeduct);
+
+        if (pointsToDeduct > 0) {
+            int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+            customer.setTotalPoints(currentPoints - pointsToDeduct);
+            userRepository.saveAndFlush(customer);
+        }
 
         Booking saved = bookingRepository.save(booking);
         notificationService.notifyBookingStatusChange(saved, BookingStatus.PENDING, customerId);

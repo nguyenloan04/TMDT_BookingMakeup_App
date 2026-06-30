@@ -114,6 +114,7 @@ public class AuthService {
         dto.setUsername(targetUser.getUsername());
         dto.setVerified(targetUser.isVerified());
         dto.setJwtToken(jwtToken);
+        dto.setTotalPoint(targetUser.getTotalPoints());
         return dto;
     }
 }
