@@ -1,6 +1,7 @@
-package com.example.tmdt_bookingmakeup_app.models.booking;
+package com.example.tmdt_bookingmakeup_app.models.payment;
 
 import com.example.tmdt_bookingmakeup_app.common.enums.PaymentStatus;
+import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
