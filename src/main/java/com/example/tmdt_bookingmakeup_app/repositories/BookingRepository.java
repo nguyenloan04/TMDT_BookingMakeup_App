@@ -1,5 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.repositories;
 
+import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.dto.request.artist.TopCustomerDTO;
 import com.example.tmdt_bookingmakeup_app.dto.request.artist.TopServiceDTO;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
@@ -51,4 +52,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findByServiceOwnerUserId(@Param("ownerUserId") UUID ownerUserId);
 
     List<Booking> findByArtistId(UUID artistId);
+
+    List<Booking> findByCustomerIdAndArtistIdAndStatusOrderByBookingDateDesc(UUID customerId, UUID artistId, BookingStatus status);
 }
