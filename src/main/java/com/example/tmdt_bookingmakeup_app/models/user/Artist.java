@@ -37,5 +37,5 @@ public class Artist {
     private Integer followCount = 0;
 
     @Column(columnDefinition = "TEXT")
-    private String portfolioImages; //FIXME: 1 artist may have n images
+    private String portfolioImages;
 }
