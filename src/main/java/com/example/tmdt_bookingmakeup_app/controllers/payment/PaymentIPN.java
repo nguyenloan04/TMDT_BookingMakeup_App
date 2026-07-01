@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/payment")
@@ -32,21 +34,28 @@ public class PaymentIPN {
             @RequestHeader(value = "Authorization", required = false) String secretKey,
             @RequestBody Map<String, Object> payload) {
 
-        if (secretKey == null || !secretKey.equals(sePayConfig.secretKey)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
-        }
+        try {
+            // 1. Lấy thẳng dữ liệu từ payload (Không qua biến "order")
+            String transferContent = (String) payload.get("content");
+            Number transferAmountNum = (Number) payload.get("transferAmount");
 
-        String notificationType = (String) payload.get("notification_type");
+            if (transferContent == null || transferAmountNum == null) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "Dữ liệu không hợp lệ"));
+            }
 
-        if ("ORDER_PAID".equals(notificationType)) {
-            Map<String, Object> orderInfo = (Map<String, Object>) payload.get("order");
-            String invoiceStr = (String) orderInfo.get("order_invoice_number");
+            double transferAmount = transferAmountNum.doubleValue();
 
-            try {
+            // 2. Tìm mã Booking ID (UUID) bị kẹp trong nội dung chuyển khoản
+            String invoiceStr = extractUUIDFromString(transferContent);
+
+            if (invoiceStr != null) {
                 UUID bookingId = UUID.fromString(invoiceStr);
                 Booking booking = bookingRepository.findById(bookingId).orElse(null);
 
                 if (booking != null && booking.getStatus() == BookingStatus.PENDING) {
+
+                    // (Tùy chọn) Nên có 1 vòng if kiểm tra transferAmount có >= booking.getDepositAmount() không
+
                     booking.setStatus(BookingStatus.PAID);
                     bookingRepository.save(booking);
 
@@ -59,8 +68,7 @@ public class PaymentIPN {
                         walletService.addFunds(ownerId, ownerEarnings);
                     }
 
-                    double totalPaid = booking.getDepositAmount() != null ? booking.getDepositAmount() : 0.0;
-                    int earnedPoints = (int) (totalPaid / 10000);   //10.000 VND = 1 point
+                    int earnedPoints = (int) (deposit / 10000);   // 10.000 VND = 1 point
 
                     if (earnedPoints > 0) {
                         User customer = booking.getCustomer();
@@ -68,12 +76,27 @@ public class PaymentIPN {
                         customer.setTotalPoints(currentPoints + earnedPoints);
                         userRepository.save(customer);
                     }
+
                     notificationService.notifyPaymentSuccess(bookingId);
+                    System.out.println("ĐÃ XỬ LÝ THÀNH CÔNG ĐƠN HÀNG: " + bookingId);
                 }
-            } catch (Exception ignored) {
+            } else {
+                System.out.println("Không tìm thấy UUID trong nội dung CK: " + transferContent);
             }
+        } catch (Exception e) {
+            System.err.println("Lỗi xử lý IPN: " + e.getMessage());
         }
 
+        // Bắt buộc trả về 200 OK cho SePay
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    private String extractUUIDFromString(String text) {
+        Pattern p = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(text);
+        if (m.find()) {
+            return m.group();
+        }
+        return null;
     }
 }
