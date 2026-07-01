@@ -29,7 +29,7 @@ public class PaymentIPN {
 
     @PostMapping("/ipn")
     public ResponseEntity<?> handleSePayIPN(
-            @RequestHeader(value = "X-Secret-Key", required = false) String secretKey,
+            @RequestHeader(value = "Authorization", required = false) String secretKey,
             @RequestBody Map<String, Object> payload) {
 
         if (secretKey == null || !secretKey.equals(sePayConfig.secretKey)) {
