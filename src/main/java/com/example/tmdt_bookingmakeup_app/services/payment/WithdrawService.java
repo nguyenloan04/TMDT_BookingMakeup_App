@@ -7,9 +7,11 @@ import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceOwnerRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.WithdrawRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -18,6 +20,11 @@ public class WithdrawService {
     private final WithdrawRepository withdrawRepository;
     private final ServiceOwnerRepository serviceOwnerRepository;
     private final WalletService walletService;
+
+    @Transactional(readOnly = true)
+    public List<Withdraw> getAllWithdrawRequests() {
+        return withdrawRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
 
     @Transactional
     public Withdraw requestWithdraw(UUID ownerId, Double amount) {
