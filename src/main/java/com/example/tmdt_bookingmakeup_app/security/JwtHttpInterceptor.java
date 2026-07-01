@@ -38,13 +38,18 @@ public class JwtHttpInterceptor implements HandlerInterceptor {
             }
         }
 
-        // The promotion listing is public. If a valid token is supplied above,
-        // the controller still receives the user identity and can apply admin/
-        // service-owner rules. Without a token it returns active promotions.
-        if (HttpMethod.GET.matches(request.getMethod())
-                && ("/promotions".equals(request.getRequestURI())
-                    || "/services".equals(request.getRequestURI()))) {
-            return true;
+        // The promotion/service/user listing/detail is public for GET requests.
+        // If a valid token is supplied above, the controller still receives the user
+        // identity. Without a token, guests can still access these endpoints.
+        if (HttpMethod.GET.matches(request.getMethod())) {
+            String uri = request.getRequestURI();
+            if ("/promotions".equals(uri)
+                    || "/services".equals(uri)
+                    || uri.matches("^/services/[a-fA-F0-9-]+$")
+                    || uri.matches("^/promotions/[a-fA-F0-9-]+$")
+                    || uri.matches("^/users/[a-fA-F0-9-]+$")) {
+                return true;
+            }
         }
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

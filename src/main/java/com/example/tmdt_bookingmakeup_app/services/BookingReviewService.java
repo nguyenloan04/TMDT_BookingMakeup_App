@@ -169,11 +169,11 @@ public class BookingReviewService {
     }
 
     public List<ReviewDto> getReviewsByOwner(UUID ownerId) {
-        return reviewRepository
-                .findByArtistOwnerUserIdOrderByCreatedAtDesc(ownerId)
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        // Tìm các review của những Booking thuộc về Service của Owner này
+        // (Yêu cầu Repository có custom query: SELECT r FROM Review r JOIN r.booking b JOIN b.service s WHERE s.owner.id = :ownerId)
+        List<BookingReview> reviews = reviewRepository.findAllByServiceOwnerId(ownerId);
+
+        return reviews.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     private void validateCreateRequest(CreateReviewRequest request) {

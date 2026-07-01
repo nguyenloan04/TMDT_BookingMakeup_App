@@ -138,152 +138,22 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-//    public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole requesterRole) {
-//        Booking booking = bookingRepository.findById(bookingId)
-//                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-//
-//        String newStatus = request.status().toUpperCase().trim();
-//        String currentStatus = String.valueOf(booking.getStatus());
-//
-//        // 1. If requester is Admin: allowed to change to any status
-//        if (requesterRole == UserRole.ADMIN) {
-//            booking.setStatus(BookingStatus.valueOf(newStatus));
-//            Booking saved = bookingRepository.save(booking);
-//            return mapToDto(saved);
-//        }
-//
-//        // 2. If requester is the Customer
-//        if (booking.getCustomer().getId().equals(requesterId)) {
-//            if (!newStatus.equals("CANCELLED")) {
-//                throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
-//            }
-//            if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
-//                throw new RuntimeException("Cannot cancel booking. Current status is: " + currentStatus);
-//            }
-//            booking.setStatus(BookingStatus.valueOf("CANCELLED"));
-//            Booking saved = bookingRepository.save(booking);
-//            return mapToDto(saved);
-//        }
-//
-//        // 3. If requester is the ServiceOwner
-//        UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
-//        if (requesterId.equals(ownerId)) {
-//            if (newStatus.equals("CONFIRMED")) {
-//                if (!currentStatus.equals("PENDING")) {
-//                    throw new RuntimeException("Cannot confirm booking from status: " + currentStatus);
-//                }
-//            } else if (newStatus.equals("COMPLETED")) {
-//                if (!currentStatus.equals("CONFIRMED")) {
-//                    throw new RuntimeException("Cannot complete booking from status: " + currentStatus);
-//                }
-//            } else if (newStatus.equals("CANCELLED")) {
-//                if (!currentStatus.equals("PENDING") && !currentStatus.equals("CONFIRMED")) {
-//                    throw new RuntimeException("Cannot cancel booking from status: " + currentStatus);
-//                }
-//            } else {
-//                throw new RuntimeException("Invalid status transition for Service Owner: " + newStatus);
-//            }
-//
-//            booking.setStatus(BookingStatus.valueOf(newStatus));
-//            Booking saved = bookingRepository.save(booking);
-//            return mapToDto(saved);
-//        }
-//
-//        throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
-//    }
 
+    public List<BookingDto> getBookings(UUID requesterId, UserRole role) {
+        List<Booking> bookings;
 
-    public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole requesterRole) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
-
-        BookingStatus newStatus = BookingStatus.valueOf(request.status().toUpperCase().trim());
-        BookingStatus currentStatus = booking.getStatus();
-
-        if (requesterRole != UserRole.ADMIN) {
-            // 1. If requester is the Customer
-            if (booking.getCustomer().getId().equals(requesterId)) {
-                if (newStatus != BookingStatus.CANCELLED) {
-                    throw new RuntimeException("Access Denied: Customers can only transition status to CANCELLED");
-                }
-                if (currentStatus != BookingStatus.PENDING && currentStatus != BookingStatus.CONFIRMED) {
-                    throw new RuntimeException("Không thể hủy đơn đặt lịch lúc này. Trạng thái hiện tại: " + currentStatus);
-                }
-            }
-            // 2. If requester is the ServiceOwner
-            else {
-                UUID ownerId = booking.getService().getOwner() != null ? booking.getService().getOwner().getUserId() : null;
-                if (requesterId.equals(ownerId)) {
-                    switch (newStatus) {
-                        case CONFIRMED -> {
-                            if (currentStatus != BookingStatus.PENDING) {
-                                throw new RuntimeException("Chỉ có thể xác nhận đơn từ trạng thái PENDING");
-                            }
-                        }
-                        case REJECTED -> {
-                            if (currentStatus != BookingStatus.PENDING) {
-                                throw new RuntimeException("Chỉ có thể từ chối đơn từ trạng thái PENDING");
-                            }
-                        }
-                        case COMPLETED -> {
-                            // BẮT BUỘC KHÁCH PHẢI THANH TOÁN (PAID) THÌ MỚI ĐƯỢC BẤM HOÀN THÀNH
-                            if (currentStatus != BookingStatus.PAID) {
-                                throw new RuntimeException("Chưa thể Hoàn thành. Khách hàng chưa thanh toán tiền cọc (PAID)!");
-                            }
-                        }
-                        default ->
-                                throw new RuntimeException("Chủ tiệm không được phép chuyển sang trạng thái: " + newStatus);
-                    }
-                } else {
-                    throw new RuntimeException("Access Denied: You are not authorized to manage this booking");
-                }
+        if (role == UserRole.ADMIN) {
+            bookings = bookingRepository.findAll();
+        } else {
+            boolean isSO = serviceOwnerRepository.existsById(requesterId);
+            if (isSO) {
+                bookings = bookingRepository.findByServiceOwnerUserId(requesterId);
+            } else {
+                bookings = bookingRepository.findByCustomerId(requesterId);
             }
         }
 
-        //Pass condition:
-        //If current user role is Admin
-        //If current user role is Customer or Service Owner: Update exact allowed status permitted
-
-        booking.setStatus(newStatus);
-
-        User customer = booking.getCustomer();
-
-        if ((newStatus == BookingStatus.CANCELLED || newStatus == BookingStatus.REJECTED)
-                && booking.getUsedPoints() != null && booking.getUsedPoints() > 0) {
-            int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
-            customer.setTotalPoints(currentPoints + booking.getUsedPoints());
-            userRepository.save(customer);
-        }
-
-        if (newStatus == BookingStatus.COMPLETED) {
-            int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
-            int pointsEarned = (int) (booking.getTotalAmount() / 10000);
-            customer.setTotalPoints(currentPoints + pointsEarned);
-            userRepository.save(customer);
-        }
-
-        Booking saved = bookingRepository.save(booking);
-        notificationService.notifyBookingStatusChange(saved, newStatus, requesterId);
-        return mapToDto(saved);
-    }
-
-    public List<BookingDto> getBookings(UUID requesterId, UserRole requesterRole) {
-        if (requesterRole == UserRole.ADMIN) {
-            return bookingRepository.findAll().stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
-        }
-
-        boolean isServiceOwner = serviceOwnerRepository.existsById(requesterId);
-        if (isServiceOwner) {
-            return bookingRepository.findByServiceOwnerUserId(requesterId).stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
-        }
-
-        return bookingRepository.findByCustomerId(requesterId).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        return bookings.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     public Map<String, Object> getDashboardStats() {
@@ -311,31 +181,69 @@ public class BookingService {
         List<Booking> bookings = bookingRepository.findByArtistId(artistId);
 
         return bookings.stream().map(booking -> {
-            // Cứ map ra DTO đầy đủ trước bằng hàm của bạn
             BookingDto dto = mapToDto(booking);
 
-            // Kiểm tra xem người đang xem có phải là Chủ tiệm (SO) không
-            boolean isOwner = false;
-            if (requesterId != null) {
-                UUID ownerId = booking.getService() != null && booking.getService().getOwner() != null
-                        ? booking.getService().getOwner().getUserId() : null;
+            // Kiểm tra quyền sở hữu (Owner của Service)
+            UUID ownerId = (booking.getService() != null && booking.getService().getOwner() != null)
+                    ? booking.getService().getOwner().getUserId() : null;
 
-                if (ownerId != null && ownerId.toString().equals(requesterId)) {
-                    isOwner = true;
-                }
-            }
+            boolean isOwner = (requesterId != null && ownerId != null && ownerId.toString().equals(requesterId));
 
-            // Nếu KHÔNG PHẢI chủ tiệm (là khách vãng lai hoặc user thường) -> Che dữ liệu lại!
-            if (!isOwner) {
+            // Nếu KHÔNG PHẢI chủ tiệm và KHÔNG PHẢI chính khách đặt lịch -> Che dữ liệu
+            boolean isCustomer = (requesterId != null && booking.getCustomer() != null && booking.getCustomer().getId().toString().equals(requesterId));
+
+            if (!isOwner && !isCustomer) {
                 dto.setCustomerId(null);
                 dto.setCustomerDisplayName("Khách hàng (Bảo mật)");
                 dto.setTotalAmount(null);
                 dto.setDepositAmount(null);
                 dto.setPlatformFee(null);
             }
-
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public BookingDto updateBookingStatus(UUID bookingId, UpdateBookingStatusRequest request, UUID requesterId, UserRole role) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt lịch"));
+
+        // 1. Nếu người yêu cầu là CUSTOMER (Khách hàng)
+        if (role == UserRole.USER && booking.getCustomer().getId().equals(requesterId)) {
+            // Khách CHỈ được phép gửi request CANCELLED
+            if (!request.status().equals(BookingStatus.CANCELLED)) {
+                throw new RuntimeException("Khách hàng chỉ được phép Hủy lịch hẹn");
+            }
+            // Khách chỉ được hủy khi lịch đang ở trạng thái PENDING hoặc CONFIRMED (chưa thanh toán cọc)
+            if (booking.getStatus() == BookingStatus.PAID || booking.getStatus() == BookingStatus.COMPLETED) {
+                throw new RuntimeException("Không thể hủy vì đơn hàng đã được thanh toán hoặc hoàn thành");
+            }
+            booking.setStatus(BookingStatus.CANCELLED);
+        }
+
+        // 2. Nếu người yêu cầu là SO (Chủ tiệm sở hữu dịch vụ này)
+        else if (role == UserRole.USER && booking.getService().getOwner().getUserId().equals(requesterId)) {
+            // Ép kiểu an toàn
+            BookingStatus newStatus;
+            try {
+                newStatus = BookingStatus.valueOf(request.status().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Trạng thái không hợp lệ");
+            }
+            booking.setStatus(newStatus);
+        }
+
+        // 3. Nếu là Admin
+        else if (role == UserRole.ADMIN) {
+            booking.setStatus(BookingStatus.valueOf(request.status()));
+        }
+
+        else {
+            throw new RuntimeException("Bạn không có quyền thay đổi trạng thái đơn này");
+        }
+
+        booking = bookingRepository.save(booking);
+        return mapToDto(booking);
     }
     private BookingDto mapToDto(Booking booking) {
         BookingDto dto = new BookingDto();

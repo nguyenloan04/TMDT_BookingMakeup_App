@@ -101,4 +101,13 @@ public class ArtistService {
         UUID customerId = UUID.fromString(customerIdStr);
         return followRepository.existsByCustomerIdAndArtistId(customerId, artistId);
     }
+
+    public List<ArtistResponseDTO> getFollowedArtists(UUID customerId) {
+        List<Follow> follows = followRepository.findByCustomerId(customerId);
+
+        // Map sang DTO
+        return follows.stream()
+                .map(follow -> ArtistResponseDTO.fromEntity(follow.getArtist()))
+                .collect(Collectors.toList());
+    }
 }

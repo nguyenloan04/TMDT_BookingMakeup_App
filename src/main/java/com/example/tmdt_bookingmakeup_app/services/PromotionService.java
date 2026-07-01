@@ -32,35 +32,35 @@ public class PromotionService {
         this.serviceOwnerRepository = serviceOwnerRepository;
     }
 
-    @Transactional
-    public PromotionDto createPromotion(CreatePromotionRequest request, UUID requesterId, UserRole requesterRole) {
-        Optional<Promotion> existingPromo = promotionRepository.findByCode(request.code());
-        if (existingPromo.isPresent()) {
-            throw new RuntimeException("Promotion code already exists: " + request.code());
-        }
-
-        Promotion promotion = new Promotion();
-        promotion.setCode(request.code().toUpperCase().trim());
-        promotion.setDiscountValue(request.discountValue());
-        promotion.setMinOrderValue(request.minOrderValue() != null ? request.minOrderValue() : 0.0);
-        promotion.setPointCharge(request.pointCharge() != null ? request.pointCharge() : 0);
-        promotion.setExpiryDate(request.expiryDate());
-
-        if (requesterRole == UserRole.ADMIN) {
-            // Platform-wide promotion: owner_id = null
-            promotion.setOwner(null);
-        } else {
-            if (!serviceOwnerRepository.existsById(requesterId)) {
-                throw new RuntimeException("Access Denied: Only Service Owners can create studio promotions");
-            }
-            ServiceOwner owner = serviceOwnerRepository.findById(requesterId)
-                    .orElseThrow(() -> new RuntimeException("ServiceOwner not found with id: " + requesterId));
-            promotion.setOwner(owner);
-        }
-
-        Promotion saved = promotionRepository.save(promotion);
-        return mapToDto(saved);
-    }
+//    @Transactional
+//    public PromotionDto createPromotion(CreatePromotionRequest request, UUID requesterId, UserRole requesterRole) {
+//        Optional<Promotion> existingPromo = promotionRepository.findByCode(request.code());
+//        if (existingPromo.isPresent()) {
+//            throw new RuntimeException("Promotion code already exists: " + request.code());
+//        }
+//
+//        Promotion promotion = new Promotion();
+//        promotion.setCode(request.code().toUpperCase().trim());
+//        promotion.setDiscountValue(request.discountValue());
+//        promotion.setMinOrderValue(request.minOrderValue() != null ? request.minOrderValue() : 0.0);
+//        promotion.setPointCharge(request.pointCharge() != null ? request.pointCharge() : 0);
+//        promotion.setExpiryDate(request.expiryDate());
+//
+//        if (requesterRole == UserRole.ADMIN) {
+//            // Platform-wide promotion: owner_id = null
+//            promotion.setOwner(null);
+//        } else {
+//            if (!serviceOwnerRepository.existsById(requesterId)) {
+//                throw new RuntimeException("Access Denied: Only Service Owners can create studio promotions");
+//            }
+//            ServiceOwner owner = serviceOwnerRepository.findById(requesterId)
+//                    .orElseThrow(() -> new RuntimeException("ServiceOwner not found with id: " + requesterId));
+//            promotion.setOwner(owner);
+//        }
+//
+//        Promotion saved = promotionRepository.save(promotion);
+//        return mapToDto(saved);
+//    }
 
     @Transactional
     public PromotionDto updatePromotion(UUID id, UpdatePromotionRequest request, UUID requesterId, UserRole requesterRole) {
@@ -95,29 +95,41 @@ public class PromotionService {
         promotionRepository.delete(promotion);
     }
 
-    public List<PromotionDto> getPromotions(UUID requesterId, UserRole requesterRole, UUID filterOwnerId) {
-        if (requesterRole == UserRole.ADMIN) {
-            return promotionRepository.findByOwnerIsNull().stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
+    public List<PromotionDto> getPromotions(UUID requesterId, UserRole role, UUID filterOwnerId) {
+        List<Promotion> promotions;
+
+        if (role == UserRole.ADMIN) {
+            // Admin lấy toàn bộ mã (có thể truyền filterOwnerId để lọc riêng tiệm nào đó nếu cần)
+            if (filterOwnerId != null) {
+                promotions = promotionRepository.findByOwnerUserId(filterOwnerId);
+            } else {
+                promotions = promotionRepository.findAll(); // Lấy tất cả
+            }
+        } else {
+            // Nếu là SO, chỉ lấy mã do chính tay SO này tạo ra
+            promotions = promotionRepository.findByOwnerUserId(requesterId);
         }
 
-        boolean isServiceOwner = requesterId != null && serviceOwnerRepository.existsById(requesterId);
-        if (isServiceOwner) {
-            return promotionRepository.findByOwnerUserId(requesterId).stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
+        return promotions.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    public PromotionDto createPromotion(CreatePromotionRequest request, UUID requesterId, UserRole role) {
+        Promotion promotion = new Promotion();
+        promotion.setCode(request.code());
+        promotion.setDiscountValue(request.discountValue());
+        // ... set các trường khác
+
+        if (role == UserRole.ADMIN) {
+            // Admin tạo thì mã này là của Hệ thống (áp dụng cho mọi tiệm)
+            promotion.setOwner(null);
+        } else {
+            // SO tạo thì mã này chỉ tiệm đó dùng được
+            ServiceOwner owner = serviceOwnerRepository.findById(requesterId)
+                    .orElseThrow(() -> new RuntimeException("Chỉ Service Owner mới tạo được mã riêng"));
+            promotion.setOwner(owner);
         }
 
-        if (filterOwnerId != null) {
-            return promotionRepository.findAllByOwnerUserIdAndExpiryDateAfter(filterOwnerId, LocalDateTime.now()).stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
-        }
-
-        return promotionRepository.findByOwnerIsNullAndExpiryDateAfter(LocalDateTime.now()).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        return mapToDto(promotionRepository.save(promotion));
     }
 
     public PromotionDto getPromotionById(UUID id) {

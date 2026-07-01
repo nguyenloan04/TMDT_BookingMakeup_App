@@ -1,5 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.dto.response.service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ public class ServiceDto {
     private Double price;
     private String category;
     private Integer duration;
+    @JsonProperty("isActive")
     private boolean isActive;
     private Double rating;
 }

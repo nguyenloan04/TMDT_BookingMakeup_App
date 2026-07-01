@@ -84,4 +84,18 @@ public class ArtistController {
         boolean isFollowed = artistService.checkFollowStatus(id, userId);
         return ResponseEntity.ok(isFollowed);
     }
+    @GetMapping("/followed")
+    public ResponseEntity<?> getFollowedArtists(HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập");
+        }
+        try {
+            UUID customerId = UUID.fromString(rawUserId);
+            List<ArtistResponseDTO> followed = artistService.getFollowedArtists(customerId);
+            return ResponseEntity.ok(followed);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }
