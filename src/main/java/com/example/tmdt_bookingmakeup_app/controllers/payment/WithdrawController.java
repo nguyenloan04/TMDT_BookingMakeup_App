@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/wallet/withdraws")
+@RequestMapping("/wallets/withdraws")
 @RequiredArgsConstructor
 public class WithdrawController {
     private final WithdrawService withdrawService;

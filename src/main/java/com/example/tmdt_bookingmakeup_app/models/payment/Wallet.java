@@ -28,8 +28,14 @@ public class Wallet {
     @Column(nullable = false)
     private Double balance = 0.0;
 
-    @Column(name = "bank_account_info", columnDefinition = "TEXT")
-    private String bankAccountInfo;
+    @Column(name = "bank_id")
+    private String bankId;
+
+    @Column(name = "account_no")
+    private String accountNo;
+
+    @Column(name = "account_name")
+    private String accountName;
 
     @Version
     private Long version;

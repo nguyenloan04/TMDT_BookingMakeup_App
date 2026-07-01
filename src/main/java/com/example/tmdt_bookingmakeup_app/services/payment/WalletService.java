@@ -15,14 +15,15 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class WalletService {
-    private WalletRepository walletRepository;
-    private UserRepository userRepository;
+    private final WalletRepository walletRepository;
+    private final UserRepository userRepository;
 
     // HÀM LAZY INIT - Lấy ví, không có thì tạo ngay lập tức
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Wallet getOrCreateWallet(UUID ownerId) {
         return walletRepository.findByOwnerId(ownerId)
                 .orElseGet(() -> {
+                    //OwnerId is User Id
                     User owner = userRepository.findById(ownerId)
                             .orElseThrow(() -> new RuntimeException("Chủ dịch vụ không tồn tại"));
 
@@ -49,5 +50,14 @@ public class WalletService {
         }
         wallet.setBalance(wallet.getBalance() - amount);
         walletRepository.save(wallet);
+    }
+
+    @Transactional
+    public Wallet updateBankInfo(UUID ownerId, String bankId, String accountNo, String accountName) {
+        Wallet wallet = getOrCreateWallet(ownerId);
+        wallet.setBankId(bankId);
+        wallet.setAccountNo(accountNo);
+        wallet.setAccountName(accountName);
+        return walletRepository.save(wallet);
     }
 }

@@ -28,8 +28,14 @@ public class Withdraw {
     @Column(nullable = false)
     private WithdrawStatus status;
 
-    @Column(name = "bank_account_info", columnDefinition = "TEXT")
-    private String bankAccountInfo; // Lưu lại STK tại thời điểm rút (phòng khi user đổi STK sau đó)
+    @Column(name = "bank_id", nullable = false)
+    private String bankId;
+
+    @Column(name = "account_no", nullable = false)
+    private String accountNo;
+
+    @Column(name = "account_name", nullable = false)
+    private String accountName;
 
     @Column(columnDefinition = "TEXT")
     private String note; // Lời nhắn từ Admin

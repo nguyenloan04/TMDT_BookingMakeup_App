@@ -15,17 +15,18 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class WithdrawService {
-    private WithdrawRepository withdrawRepository;
-    private ServiceOwnerRepository serviceOwnerRepository;
-    private WalletService walletService;
+    private final WithdrawRepository withdrawRepository;
+    private final ServiceOwnerRepository serviceOwnerRepository;
+    private final WalletService walletService;
 
     @Transactional
     public Withdraw requestWithdraw(UUID ownerId, Double amount) {
         ServiceOwner owner = serviceOwnerRepository.findById(ownerId).orElseThrow();
         Wallet ownerWallet = walletService.getOrCreateWallet(ownerId);
 
-        if (ownerWallet.getBankAccountInfo() == null || ownerWallet.getBankAccountInfo().isEmpty()) {
-            throw new RuntimeException("Vui lòng cập nhật thông tin Ngân hàng trước khi rút tiền!");
+        if (ownerWallet.getBankId() == null || ownerWallet.getAccountNo() == null || ownerWallet.getAccountName() == null
+                || ownerWallet.getBankId().trim().isEmpty() || ownerWallet.getAccountNo().trim().isEmpty()) {
+            throw new RuntimeException("Vui lòng cập nhật đầy đủ thông tin Ngân hàng (Mã NH, Số TK, Tên chủ TK) trước khi rút tiền!");
         }
 
         // Trừ tiền trong ví ngay lập tức (đóng băng số dư)
@@ -37,7 +38,9 @@ public class WithdrawService {
         request.setOwner(owner);
         request.setAmount(amount);
         request.setStatus(WithdrawStatus.PENDING);
-        request.setBankAccountInfo(ownerWallet.getBankAccountInfo()); // Snapshot số tài khoản hiện tại
+        request.setBankId(ownerWallet.getBankId());
+        request.setAccountNo(ownerWallet.getAccountNo());
+        request.setAccountName(ownerWallet.getAccountName());
         return withdrawRepository.save(request);
     }
 
