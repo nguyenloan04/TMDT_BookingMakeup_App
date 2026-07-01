@@ -27,12 +27,16 @@ public class ChatController {
     public void processMessage(@Payload ChatDto chatDto) {
         ChatMessage saved = chatMessageService.save(chatDto);
 
-        ///user/{recipientId}/queue/messages
-        messagingTemplate.convertAndSendToUser(
-                chatDto.recipientId(),
-                "/queue/messages",
+        messagingTemplate.convertAndSend(
+                "/queue/messages/" + chatDto.recipientId(),
                 saved
         );
+        ///user/{recipientId}/queue/messages
+//        messagingTemplate.convertAndSendToUser(
+//                chatDto.recipientId(),
+//                "/queue/messages",
+//                saved
+//        );
     }
 
     @MessageMapping("/chat.delivered")
@@ -43,11 +47,16 @@ public class ChatController {
     @MessageMapping("/chat.read")
     public void markAsRead(@Payload ChatDto chatDto) {
         chatMessageService.markAsRead(chatDto.chatId(), UUID.fromString(chatDto.recipientId()));
-        messagingTemplate.convertAndSendToUser(
-                chatDto.senderId(),
-                "/queue/messages",
+
+        messagingTemplate.convertAndSend(
+                "/queue/messages/" + chatDto.senderId(),
                 chatDto
         );
+//        messagingTemplate.convertAndSendToUser(
+//                chatDto.senderId(),
+//                "/queue/messages",
+//                chatDto
+//        );
     }
 
     @MessageMapping("/chat.presence")
