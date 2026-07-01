@@ -48,9 +48,7 @@ public class BookingService {
         Service service = serviceRepository.findById(request.serviceId())
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + request.serviceId()));
 
-        Artist artist = artistRepository.findByOwnerUserId(request.ownerId()).stream()
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Chủ tiệm này hiện chưa có thợ nào để nhận lịch!"));
+        Artist artist = artistRepository.findById(request.artistId()).orElseThrow();
 
         // 2. Calculate end time based on service duration (default to 60 minutes if null)
         int durationMinutes = service.getDuration() != null ? service.getDuration() : 60;
