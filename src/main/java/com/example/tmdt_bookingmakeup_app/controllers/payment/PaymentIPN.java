@@ -5,6 +5,8 @@ import com.example.tmdt_bookingmakeup_app.config.SePayConfig;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
 import com.example.tmdt_bookingmakeup_app.services.NotificationService;
+import com.example.tmdt_bookingmakeup_app.services.payment.WalletService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +17,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/payment")
+@RequiredArgsConstructor
 public class PaymentIPN {
-
-    @Autowired
     private BookingRepository bookingRepository;
-
-    @Autowired
     private SePayConfig sePayConfig;
-
-    @Autowired
     private NotificationService notificationService;
+    private WalletService walletService;
 
     @PostMapping("/ipn")
     public ResponseEntity<?> handleSePayIPN(
@@ -48,6 +46,16 @@ public class PaymentIPN {
                 if (booking != null && booking.getStatus() == BookingStatus.PENDING) {
                     booking.setStatus(BookingStatus.PAID);
                     bookingRepository.save(booking);
+
+                    double deposit = booking.getDepositAmount() != null ? booking.getDepositAmount() : 0.0;
+                    double platformFee = booking.getPlatformFee() != null ? booking.getPlatformFee() : 0.0;
+                    double ownerEarnings = deposit - platformFee;
+
+                    if (ownerEarnings > 0) {
+                        UUID ownerId = booking.getService().getOwner().getUserId();
+                        walletService.addFunds(ownerId, ownerEarnings);
+                    }
+
                     notificationService.notifyPaymentSuccess(bookingId);
                 }
             } catch (Exception ignored) {

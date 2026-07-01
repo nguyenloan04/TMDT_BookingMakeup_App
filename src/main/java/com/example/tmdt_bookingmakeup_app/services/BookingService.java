@@ -42,21 +42,15 @@ public class BookingService {
 
     @Transactional
     public BookingDto createBooking(CreateBookingRequest request, UUID customerId) {
-        // 1. Fetch user, service and artist
         User customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
 
         Service service = serviceRepository.findById(request.serviceId())
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + request.serviceId()));
 
-//        Artist artist = artistRepository.findById(request.artistId())
-//                .orElseThrow(() -> new RuntimeException("Artist not found with id: " + request.artistId()));
-
-        //FIXME: Choose artist or random artist
-        Artist artist = artistRepository.findById(request.ownerId())
-                .orElseGet(() -> artistRepository.findAll().stream()
-                        .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Artist not found")));
+        Artist artist = artistRepository.findByOwnerUserId(request.ownerId()).stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Chủ tiệm này hiện chưa có thợ nào để nhận lịch!"));
 
         // 2. Calculate end time based on service duration (default to 60 minutes if null)
         int durationMinutes = service.getDuration() != null ? service.getDuration() : 60;

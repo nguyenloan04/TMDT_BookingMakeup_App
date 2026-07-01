@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -92,6 +94,25 @@ public class ReviewController {
         }
         reviewService.deleteReview(id);
         return ResponseEntity.ok("Review deleted successfully");
+    }
+
+    @GetMapping("/check-reviewable/{artistId}")
+    public ResponseEntity<?> checkReviewable(@PathVariable UUID artistId, HttpServletRequest request) {
+        String rawUserId = (String) request.getAttribute("userId");
+        if (rawUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("canReview", false));
+        }
+
+        try {
+            UUID customerId = UUID.fromString(rawUserId);
+            Optional<UUID> bookingId = reviewService.getReviewableBookingId(customerId, artistId);
+            return bookingId.map(uuid -> ResponseEntity.ok(Map.of(
+                    "canReview", true,
+                    "bookingId", uuid.toString()
+            ))).orElseGet(() -> ResponseEntity.ok(Map.of("canReview", false)));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("canReview", false));
+        }
     }
 
     private boolean isAdmin(HttpServletRequest request) {
