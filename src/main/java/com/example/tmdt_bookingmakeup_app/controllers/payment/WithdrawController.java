@@ -74,6 +74,19 @@ public class WithdrawController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllWithdraws(HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            var withdraws = withdrawService.getAllWithdrawRequests();
+            return ResponseEntity.ok(withdraws);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
+    }
+
     //Seperated to single file later
     private boolean isAdmin(HttpServletRequest request) {
         String rawUserId = (String) request.getAttribute("userId");
