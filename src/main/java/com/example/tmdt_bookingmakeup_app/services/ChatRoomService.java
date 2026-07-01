@@ -21,6 +21,9 @@ public class ChatRoomService {
 
     //Use String as Id to make sure both user always enter the same room
     public Optional<ChatRoom> getChatRoom(User sender, User recipient, boolean createIfNotExist) {
+        if (sender.getId().equals(recipient.getId())) {
+            return Optional.empty();
+        }
         String sId = sender.getId().toString();
         String rId = recipient.getId().toString();
         String roomId = sId.compareTo(rId) < 0 ? sId + "_" + rId : rId + "_" + sId;
@@ -47,7 +50,7 @@ public class ChatRoomService {
         List<ChatRoom> rooms = chatRoomRepository.findByUserId(userId);
 
         return rooms.stream().map(room -> {
-            User partner = room.getSender().getId().equals(userId) ? room.getRecipient() : room.getSender();
+            User partner = room.getSender().getId().equals(userId) && !room.getRecipient().getId().equals(userId) ? room.getRecipient() : room.getSender();
 
             int unread = 0;
             if (room.getUnreadCount() > 0) {
