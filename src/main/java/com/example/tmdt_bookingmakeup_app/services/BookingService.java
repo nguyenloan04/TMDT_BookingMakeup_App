@@ -208,10 +208,17 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt lịch"));
 
+        BookingStatus requestedStatus;
+        try {
+            requestedStatus = BookingStatus.valueOf(request.status().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Trạng thái không hợp lệ: " + request.status());
+        }
+
         // 1. Nếu người yêu cầu là CUSTOMER (Khách hàng)
         if (role == UserRole.USER && booking.getCustomer().getId().equals(requesterId)) {
             // Khách CHỈ được phép gửi request CANCELLED
-            if (!request.status().equals(BookingStatus.CANCELLED)) {
+            if (requestedStatus != BookingStatus.CANCELLED) {
                 throw new RuntimeException("Khách hàng chỉ được phép Hủy lịch hẹn");
             }
             // Khách chỉ được hủy khi lịch đang ở trạng thái PENDING hoặc CONFIRMED (chưa thanh toán cọc)
@@ -223,13 +230,25 @@ public class BookingService {
 
         // 2. Nếu người yêu cầu là SO (Chủ tiệm sở hữu dịch vụ này)
         else if (role == UserRole.USER && booking.getService().getOwner().getUserId().equals(requesterId)) {
-            // Ép kiểu an toàn
             BookingStatus newStatus;
             try {
                 newStatus = BookingStatus.valueOf(request.status().toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Trạng thái không hợp lệ");
             }
+
+            if (requestedStatus == BookingStatus.COMPLETED && booking.getStatus() != BookingStatus.COMPLETED) {
+                double totalPaid = booking.getDepositAmount();
+                int earnedPoints = (int) (totalPaid / 10000);   //10.000 VND = 1 point
+
+                if (earnedPoints > 0) {
+                    User customer = booking.getCustomer();
+                    int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+                    customer.setTotalPoints(currentPoints + earnedPoints);
+                    userRepository.save(customer);
+                }
+            }
+
             booking.setStatus(newStatus);
         }
 
