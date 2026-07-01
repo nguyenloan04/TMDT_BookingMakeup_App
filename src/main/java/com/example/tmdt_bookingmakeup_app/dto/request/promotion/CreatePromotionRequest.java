@@ -1,6 +1,6 @@
 package com.example.tmdt_bookingmakeup_app.dto.request.promotion;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record CreatePromotionRequest(
@@ -9,5 +9,5 @@ public record CreatePromotionRequest(
     Double discountValue,
     Double minOrderValue,
     Integer pointCharge,
-    LocalDateTime expiryDate
+    LocalDate expiryDate
 ) {}

@@ -117,7 +117,12 @@ public class PromotionService {
         Promotion promotion = new Promotion();
         promotion.setCode(request.code());
         promotion.setDiscountValue(request.discountValue());
-        // ... set các trường khác
+        promotion.setMinOrderValue(request.minOrderValue());
+        promotion.setPointCharge(request.pointCharge());
+
+        if (request.expiryDate() != null) {
+            promotion.setExpiryDate(request.expiryDate().atTime(23, 59, 59));
+        }
 
         if (role == UserRole.ADMIN) {
             // Admin tạo thì mã này là của Hệ thống (áp dụng cho mọi tiệm)
