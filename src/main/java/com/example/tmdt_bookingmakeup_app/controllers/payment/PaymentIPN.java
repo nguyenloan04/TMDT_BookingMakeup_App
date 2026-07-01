@@ -3,7 +3,9 @@ package com.example.tmdt_bookingmakeup_app.controllers.payment;
 import com.example.tmdt_bookingmakeup_app.common.enums.BookingStatus;
 import com.example.tmdt_bookingmakeup_app.config.SePayConfig;
 import com.example.tmdt_bookingmakeup_app.models.booking.Booking;
+import com.example.tmdt_bookingmakeup_app.models.user.User;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
+import com.example.tmdt_bookingmakeup_app.repositories.UserRepository;
 import com.example.tmdt_bookingmakeup_app.services.NotificationService;
 import com.example.tmdt_bookingmakeup_app.services.payment.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +21,11 @@ import java.util.UUID;
 @RequestMapping("/payment")
 @RequiredArgsConstructor
 public class PaymentIPN {
-    private BookingRepository bookingRepository;
-    private SePayConfig sePayConfig;
-    private NotificationService notificationService;
-    private WalletService walletService;
+    private final BookingRepository bookingRepository;
+    private final SePayConfig sePayConfig;
+    private final NotificationService notificationService;
+    private final WalletService walletService;
+    private final UserRepository userRepository;
 
     @PostMapping("/ipn")
     public ResponseEntity<?> handleSePayIPN(
@@ -56,6 +59,15 @@ public class PaymentIPN {
                         walletService.addFunds(ownerId, ownerEarnings);
                     }
 
+                    double totalPaid = booking.getDepositAmount() != null ? booking.getDepositAmount() : 0.0;
+                    int earnedPoints = (int) (totalPaid / 10000);   //10.000 VND = 1 point
+
+                    if (earnedPoints > 0) {
+                        User customer = booking.getCustomer();
+                        int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
+                        customer.setTotalPoints(currentPoints + earnedPoints);
+                        userRepository.save(customer);
+                    }
                     notificationService.notifyPaymentSuccess(bookingId);
                 }
             } catch (Exception ignored) {
