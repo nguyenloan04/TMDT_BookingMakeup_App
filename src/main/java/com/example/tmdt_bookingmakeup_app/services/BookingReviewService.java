@@ -10,6 +10,7 @@ import com.example.tmdt_bookingmakeup_app.models.user.Artist;
 import com.example.tmdt_bookingmakeup_app.repositories.ArtistRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.BookingReviewRepository;
+import com.example.tmdt_bookingmakeup_app.repositories.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +27,18 @@ public class BookingReviewService {
     private final BookingReviewRepository reviewRepository;
     private final BookingRepository bookingRepository;
     private final ArtistRepository artistRepository;
+    private final ServiceRepository serviceRepository;
 
     @Autowired
     public BookingReviewService(
             BookingReviewRepository reviewRepository,
             BookingRepository bookingRepository,
-            ArtistRepository artistRepository) {
+            ArtistRepository artistRepository,
+            ServiceRepository serviceRepository) {
         this.reviewRepository = reviewRepository;
         this.bookingRepository = bookingRepository;
         this.artistRepository = artistRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     public Optional<UUID> getReviewableBookingId(UUID customerId, UUID artistId) {
@@ -144,7 +148,27 @@ public class BookingReviewService {
         review.setStatus(ReviewStatus.APPROVED);
 
         BookingReview saved = reviewRepository.save(review);
-        refreshArtistRating(saved.getArtist());
+        
+        Artist artist = saved.getArtist();
+        if (artist != null) {
+            int currentCount = artist.getReviewCount() != null ? artist.getReviewCount() : 0;
+            double currentArtistRating = artist.getAverageRating() != null ? artist.getAverageRating() : 0.0;
+            
+            double newArtistRating = (currentArtistRating * currentCount + request.artistRating()) / (currentCount + 1);
+            artist.setAverageRating(newArtistRating);
+            
+            if (booking.getService() != null) {
+                com.example.tmdt_bookingmakeup_app.models.services.Service svc = booking.getService();
+                double currentServiceRating = svc.getRating() != null ? svc.getRating() : 0.0;
+                double newServiceRating = (currentServiceRating * currentCount + request.bookingRating()) / (currentCount + 1);
+                svc.setRating(newServiceRating);
+                serviceRepository.save(svc);
+            }
+
+            artist.setReviewCount(currentCount + 1);
+            artistRepository.save(artist);
+        }
+
         return mapToDto(saved);
     }
 
