@@ -237,18 +237,6 @@ public class BookingService {
                 throw new RuntimeException("Trạng thái không hợp lệ");
             }
 
-            if (requestedStatus == BookingStatus.COMPLETED && booking.getStatus() != BookingStatus.COMPLETED) {
-                double totalPaid = booking.getDepositAmount();
-                int earnedPoints = (int) (totalPaid / 10000);   //10.000 VND = 1 point
-
-                if (earnedPoints > 0) {
-                    User customer = booking.getCustomer();
-                    int currentPoints = customer.getTotalPoints() != null ? customer.getTotalPoints() : 0;
-                    customer.setTotalPoints(currentPoints + earnedPoints);
-                    userRepository.save(customer);
-                }
-            }
-
             booking.setStatus(newStatus);
         }
 
