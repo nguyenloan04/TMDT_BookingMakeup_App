@@ -6,6 +6,7 @@ import com.example.tmdt_bookingmakeup_app.models.payment.Withdraw;
 import com.example.tmdt_bookingmakeup_app.models.user.ServiceOwner;
 import com.example.tmdt_bookingmakeup_app.repositories.ServiceOwnerRepository;
 import com.example.tmdt_bookingmakeup_app.repositories.WithdrawRepository;
+import com.example.tmdt_bookingmakeup_app.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class WithdrawService {
     private final WithdrawRepository withdrawRepository;
     private final ServiceOwnerRepository serviceOwnerRepository;
     private final WalletService walletService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<Withdraw> getAllWithdrawRequests() {
@@ -61,7 +63,9 @@ public class WithdrawService {
 
         request.setStatus(WithdrawStatus.APPROVED);
         request.setNote("Đã chuyển khoản thành công. Mã GD: " + transactionCode);
-        return withdrawRepository.save(request);
+        Withdraw savedRequest = withdrawRepository.save(request);
+        notificationService.notifyWithdrawStatus(savedRequest, WithdrawStatus.APPROVED);
+        return savedRequest;
     }
 
     @Transactional
@@ -74,10 +78,10 @@ public class WithdrawService {
 
         request.setStatus(WithdrawStatus.REJECTED);
         request.setNote("Từ chối: " + reason);
-        withdrawRepository.save(request);
+        Withdraw savedRequest = withdrawRepository.save(request);
 
         walletService.addFunds(request.getOwner().getUserId(), request.getAmount());
-
+        notificationService.notifyWithdrawStatus(savedRequest, WithdrawStatus.REJECTED);
         return request;
     }
 }

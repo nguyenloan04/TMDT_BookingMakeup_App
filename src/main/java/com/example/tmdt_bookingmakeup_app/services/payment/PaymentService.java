@@ -40,6 +40,7 @@ public class PaymentService {
         fields.put("merchant", config.merchantId);
         fields.put("operation", "PURCHASE");
         fields.put("order_amount", String.valueOf(Math.round(booking.getDepositAmount())));
+//        fields.put("order_amount", "2000"); //This is field is dev
         fields.put("currency", "VND");
         fields.put("order_invoice_number", bookingId.toString());
         fields.put("order_description", "Thanh toan coc dat lich " + bookingId.toString().substring(0, 8));

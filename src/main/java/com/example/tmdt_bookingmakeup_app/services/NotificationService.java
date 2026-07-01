@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -168,6 +169,25 @@ public class NotificationService {
     public void markAllAsRead(UUID recipientId) {
         notificationRepository.markAllAsRead(recipientId);
         redisCache.clearUnreadCount(recipientId);
+    }
+
+    public void notifyWithdrawStatus(com.example.tmdt_bookingmakeup_app.models.payment.Withdraw withdraw, com.example.tmdt_bookingmakeup_app.common.enums.WithdrawStatus status) {
+        UUID ownerId = withdraw.getOwner().getUserId();
+        String formattedAmount = java.text.NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(withdraw.getAmount());
+
+        if (status == com.example.tmdt_bookingmakeup_app.common.enums.WithdrawStatus.APPROVED) {
+            createNotification(
+                    ownerId, null, NotificationType.WITHDRAW_APPROVED,
+                    "Rút tiền thành công.",
+                    "Yêu cầu rút " + formattedAmount + " của bạn đã được Admin duyệt và chuyển khoản thành công!"
+            );
+        } else if (status == com.example.tmdt_bookingmakeup_app.common.enums.WithdrawStatus.REJECTED) {
+            createNotification(
+                    ownerId, null, NotificationType.WITHDRAW_REJECTED,
+                    "Rút tiền thất bại.",
+                    "Yêu cầu rút " + formattedAmount + " bị từ chối. Lý do: " + withdraw.getNote() + ". Số tiền đã được hoàn lại vào ví."
+            );
+        }
     }
 
     private NotificationDto mapToDto(Notification notification) {

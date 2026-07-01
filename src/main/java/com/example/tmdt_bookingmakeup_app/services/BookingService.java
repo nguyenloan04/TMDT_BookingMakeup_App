@@ -248,6 +248,7 @@ public class BookingService {
         }
 
         booking = bookingRepository.save(booking);
+        notificationService.notifyBookingStatusChange(booking, requestedStatus, requesterId);
         return mapToDto(booking);
     }
     private BookingDto mapToDto(Booking booking) {
