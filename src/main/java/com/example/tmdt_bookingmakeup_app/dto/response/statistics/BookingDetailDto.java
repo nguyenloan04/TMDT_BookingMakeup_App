@@ -22,4 +22,5 @@ public class BookingDetailDto {
     private Double studioReceives;
     private String status;
     private String statusLabel;
+    private String serviceCategory;
 }

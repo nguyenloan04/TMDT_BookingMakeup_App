@@ -39,7 +39,7 @@ public class HomePageService {
         return new HomePageResponse(featuredProviders, featuredArtists, promotions);
     }
 
-    private List<FeaturedProviderDto> getTopProviders() {
+    public List<FeaturedProviderDto> getTopProviders() {
         List<ServiceOwner> topProviders = artistRepository.findByOwner_User_RoleNot(UserRole.ADMIN,
                 PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "averageRating"))
         ).getContent().stream().map(Artist::getOwner).toList();
@@ -49,7 +49,7 @@ public class HomePageService {
                 .toList();
     }
 
-    private List<FeaturedArtistDto> getTopArtists() {
+    public List<FeaturedArtistDto> getTopArtists() {
         List<Artist> topArtists = artistRepository.findByOwner_User_RoleNot(UserRole.ADMIN,
                 PageRequest.of(0, 8, Sort.by(Sort.Direction.DESC, "averageRating"))
         ).getContent();
@@ -59,7 +59,7 @@ public class HomePageService {
                 .toList();
     }
 
-    private List<HomePromotionDto> getActivePromotions() {
+    public List<HomePromotionDto> getActivePromotions() {
         List<Promotion> activePromos = promotionRepository.findAllByExpiryDateAfter(LocalDateTime.now());
         return activePromos.stream()
                 .map(this::mapToHomePromotionDto)
