@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @Service
 public class StatisticsService {
@@ -29,8 +30,8 @@ public class StatisticsService {
         this.serviceOwnerRepository = serviceOwnerRepository;
     }
 
-    public RevenueStatisticsResponse getRevenueStatistics(UUID requesterId, UserRole role) {
-        List<Booking> bookings = getFilteredBookings(requesterId, role);
+    public RevenueStatisticsResponse getRevenueStatistics(UUID requesterId, UserRole role, LocalDate startDate, LocalDate endDate) {
+        List<Booking> bookings = getFilteredBookings(requesterId, role, startDate, endDate);
 
         // Calculate totals for COMPLETED, PAID, and CONFIRMED bookings
         double totalRevenue = 0.0;
@@ -69,8 +70,8 @@ public class StatisticsService {
                 .build();
     }
 
-    public BookingStatisticsResponse getBookingStatistics(UUID requesterId, UserRole role) {
-        List<Booking> bookings = getFilteredBookings(requesterId, role);
+    public BookingStatisticsResponse getBookingStatistics(UUID requesterId, UserRole role, LocalDate startDate, LocalDate endDate) {
+        List<Booking> bookings = getFilteredBookings(requesterId, role, startDate, endDate);
 
         long totalBookings = bookings.size();
         long pendingCount = 0;
@@ -120,6 +121,10 @@ public class StatisticsService {
             cancellationRate = roundToPercentage((cancelledCount * 100.0) / totalBookings);
         }
 
+        List<BookingDetailDto> bookingDetails = bookings.stream()
+                .map(this::mapToDetailDto)
+                .collect(Collectors.toList());
+
         return BookingStatisticsResponse.builder()
                 .totalBookings(totalBookings)
                 .pendingCount(pendingCount)
@@ -135,20 +140,29 @@ public class StatisticsService {
                 .cancelledPercentage(cancelledPercentage)
                 .completionRate(completionRate)
                 .cancellationRate(cancellationRate)
+                .bookings(bookingDetails)
                 .build();
     }
 
-    private List<Booking> getFilteredBookings(UUID requesterId, UserRole role) {
+    private List<Booking> getFilteredBookings(UUID requesterId, UserRole role, LocalDate startDate, LocalDate endDate) {
+        List<Booking> bookings;
         if (role == UserRole.ADMIN) {
-            return bookingRepository.findAll();
+            bookings = bookingRepository.findAll();
         } else {
             boolean isSO = serviceOwnerRepository.existsById(requesterId);
             if (isSO) {
-                return bookingRepository.findByServiceOwnerUserId(requesterId);
+                bookings = bookingRepository.findByServiceOwnerUserId(requesterId);
             } else {
                 throw new RuntimeException("Access Denied: Only Admins and Service Owners are allowed to view statistics.");
             }
         }
+        if (startDate != null) {
+            bookings = bookings.stream().filter(b -> b.getBookingDate() != null && !b.getBookingDate().isBefore(startDate)).toList();
+        }
+        if (endDate != null) {
+            bookings = bookings.stream().filter(b -> b.getBookingDate() != null && !b.getBookingDate().isAfter(endDate)).toList();
+        }
+        return bookings;
     }
 
     private BookingDetailDto mapToDetailDto(Booking booking) {
@@ -161,6 +175,7 @@ public class StatisticsService {
                 .bookingDate(booking.getBookingDate())
                 .customerName(booking.getCustomer() != null ? booking.getCustomer().getDisplayName() : "Khách ẩn danh")
                 .serviceName(booking.getService() != null ? booking.getService().getName() : "Dịch vụ đã xóa")
+                .serviceCategory(booking.getService() != null ? booking.getService().getCategory() : "Khác")
                 .totalAmount(total)
                 .depositAmount(booking.getDepositAmount() != null ? booking.getDepositAmount() : 0.0)
                 .platformFee(fee)

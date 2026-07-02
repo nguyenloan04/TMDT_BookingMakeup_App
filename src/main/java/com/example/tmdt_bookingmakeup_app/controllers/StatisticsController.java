@@ -11,9 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.List;
-
 import java.util.UUID;
 
 @RestController
@@ -30,7 +31,11 @@ public class StatisticsController {
     }
 
     @GetMapping("/revenue")
-    public ResponseEntity<?> getRevenueStatistics(HttpServletRequest request) {
+    public ResponseEntity<?> getRevenueStatistics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            HttpServletRequest request
+    ) {
         String rawUserId = (String) request.getAttribute("userId");
         if (rawUserId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
@@ -38,7 +43,7 @@ public class StatisticsController {
         try {
             UUID requesterId = UUID.fromString(rawUserId);
             UserDto requester = userService.getUserProfile(requesterId);
-            RevenueStatisticsResponse stats = statisticsService.getRevenueStatistics(requesterId, requester.getRole());
+            RevenueStatisticsResponse stats = statisticsService.getRevenueStatistics(requesterId, requester.getRole(), startDate, endDate);
             return ResponseEntity.ok(stats);
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("Access Denied")) {
@@ -51,7 +56,11 @@ public class StatisticsController {
     }
 
     @GetMapping("/bookings")
-    public ResponseEntity<?> getBookingStatistics(HttpServletRequest request) {
+    public ResponseEntity<?> getBookingStatistics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            HttpServletRequest request
+    ) {
         String rawUserId = (String) request.getAttribute("userId");
         if (rawUserId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Missing User Session");
@@ -59,7 +68,7 @@ public class StatisticsController {
         try {
             UUID requesterId = UUID.fromString(rawUserId);
             UserDto requester = userService.getUserProfile(requesterId);
-            BookingStatisticsResponse stats = statisticsService.getBookingStatistics(requesterId, requester.getRole());
+            BookingStatisticsResponse stats = statisticsService.getBookingStatistics(requesterId, requester.getRole(), startDate, endDate);
             return ResponseEntity.ok(stats);
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("Access Denied")) {
